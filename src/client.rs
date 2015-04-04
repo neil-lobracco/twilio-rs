@@ -4,6 +4,7 @@ extern crate mime;
 use std::io::Read;
 use self::hyper::header::{Authorization,Basic};
 use self::hyper::status::StatusCode;
+pub use self::hyper::method::Method::{Post,Get,Put};
 
 use message;
 pub struct Client {
@@ -72,9 +73,5 @@ impl Client {
             Err(_)  => return Err(TwilioError::ParsingError),
         };
         Ok(decoded)
-    }
-    pub fn send_message(&self, msg: message::OutboundMessage) -> Result<message::Message,TwilioError> {
-        let opts = [("To",&*msg.to),("From",&*msg.from),("Body",&*msg.body)];
-        self.send_request(hyper::Post,"Messages",&opts)
     }
 }
