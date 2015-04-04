@@ -1,0 +1,15 @@
+[package]
+
+name = "twilio"
+version = "0.0.1"
+description = "Rust bindings for the Twilio API"
+readme = "README.md"
+repository = "https://github.com/neil-lobracco/twilio-rs"
+license = "MIT"
+authors = ["Neil LoBracco <neil.lobracco@gmail.com>"]
+keywords = ["twilio","rust"]
+
+[dependencies]
+hyper = "*"
+rustc-serialize="*"
+mime = "*"
