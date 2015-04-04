@@ -2,11 +2,13 @@ extern crate hyper;
 extern crate rustc_serialize;
 extern crate mime;
 use std::io::Read;
+use self::hyper::header::{Authorization,Basic};
+use self::hyper::status::StatusCode;
 
 use message;
 pub struct Client {
     account_id : String,
-    auth_token : String,
+    auth_header : Authorization<Basic>,
 }
 fn url_encode(params: &[(&str,&str)]) -> String {
     params.iter().map(|&t| {
@@ -19,34 +21,60 @@ fn url_encode(params: &[(&str,&str)]) -> String {
     })
 }
 
-fn basic_auth_header(username: String, password: String) -> hyper::header::Authorization<hyper::header::Basic> {
-    hyper::header::Authorization(hyper::header::Basic { username : username, password : Some(password) })
+fn basic_auth_header(username: String, password: String) -> Authorization<Basic> {
+    Authorization(Basic { username : username, password : Some(password) })
+}
+
+#[derive(Debug)]
+pub enum TwilioError {
+    NetworkError,
+    HTTPError,
+    ParsingError,
 }
 
 impl Client {
-    pub fn new(account_id: String, auth_token: String) -> Client {
-        Client { account_id : account_id, auth_token : auth_token }
+    pub fn new(account_id: &str, auth_token: &str) -> Client {
+        Client {
+            account_id : account_id.to_string(),
+            auth_header : basic_auth_header(account_id.to_string(),auth_token.to_string()),
+        }
     }
-    pub fn send_message(&self, msg: message::OutboundMessage) -> Result<message::Message,hyper::status::StatusCode> {
-        let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/Messages.json",self.account_id);
-        let opts = [("To",&*msg.to),("From",&*msg.from),("Body",&*msg.body)];
+    fn send_request<T : rustc_serialize::Decodable>(&self, method: hyper::method::Method, endpoint: &str, params: &[(&str,&str)]) -> Result<T,TwilioError> {
+        let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
         let mut http_client = hyper::Client::new();
-        let post_body: &str = &*url_encode(&opts);
+        let post_body: &str = &*url_encode(params);
         println!("POST body: '{}'",post_body);
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();
         let content_type_header = hyper::header::ContentType(mime);
-        let req = http_client.post(&*url).body(post_body).header(basic_auth_header(self.account_id.clone(),self.auth_token.clone())).header(content_type_header);
-        let mut resp = req.send().unwrap();
+        let req = http_client
+            .request(method,&*url)
+            .body(post_body)
+            .header(self.auth_header.clone())
+            .header(content_type_header);
+        let mut resp = match req.send() {
+            Ok(res) => res,
+            Err(_) => return Err(TwilioError::NetworkError),
+        };
         let mut body_str = "".to_string();
-        resp.read_to_string(&mut body_str).unwrap();
+        match resp.read_to_string(&mut body_str) {
+            Ok(_) => (),
+            Err(_) => return Err(TwilioError::NetworkError),
+        };
         match resp.status {
-            hyper::status::StatusCode::Created => (),
+            StatusCode::Created | StatusCode::Ok => (),
             _ => {
                 println!("{:?}",body_str);
-                return Err(resp.status)
+                return Err(TwilioError::HTTPError)
             }
-        }
-        let decoded: message::Message = rustc_serialize::json::decode(&body_str).unwrap();
+        };
+        let decoded: T = match rustc_serialize::json::decode(&body_str) {
+            Ok(obj) => obj,
+            Err(_)  => return Err(TwilioError::ParsingError),
+        };
         Ok(decoded)
+    }
+    pub fn send_message(&self, msg: message::OutboundMessage) -> Result<message::Message,TwilioError> {
+        let opts = [("To",&*msg.to),("From",&*msg.from),("Body",&*msg.body)];
+        self.send_request(hyper::Post,"Messages",&opts)
     }
 }

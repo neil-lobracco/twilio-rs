@@ -1,3 +1,6 @@
 extern crate rustc_serialize;
-pub mod client;
-pub mod message;
+mod client;
+mod message;
+
+pub use client::Client;
+pub use message::{Message,OutboundMessage};
