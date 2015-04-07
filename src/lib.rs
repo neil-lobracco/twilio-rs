@@ -3,12 +3,14 @@ extern crate rustc_serialize;
 extern crate mime;
 mod message;
 mod call;
+mod inbound;
 use std::io::Read;
 use self::hyper::header::{Authorization,Basic};
 use self::hyper::status::StatusCode;
 pub use self::hyper::method::Method::{Post,Get,Put};
 pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
+pub use inbound::{parse_request};
 
 pub struct Client {
     account_id : String,
@@ -34,6 +36,8 @@ pub enum TwilioError {
     NetworkError,
     HTTPError,
     ParsingError,
+    AuthError,
+    BadRequest,
 }
 
 impl Client {
