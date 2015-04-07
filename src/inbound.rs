@@ -1,15 +1,26 @@
 extern crate sha1;
+use self::sha1::Sha1;
 use hyper::server::request::Request;
 use hyper::header::Host;
 use hyper::uri::RequestUri::AbsolutePath;
-use hyper::method::Method::Post;
+use hyper::method::Method::{Get,Post};
 use rustc_serialize::Decodable;
+use rustc_serialize::base64::{ToBase64,STANDARD};
+use std::io::Read;
 
-fn post_args(req: &Request) -> Vec<(String,String)> {
+fn parse_object<T : Decodable>(args: &[(String,String)]) -> Result<T,::TwilioError> {
+    Err(::TwilioError::NetworkError)
+}
+
+fn get_args(path: &str) -> Vec<(String,String)> {
     vec![]
 }
 
-pub fn parse_request<T : Decodable>(req: Request) -> Result<T,::TwilioError> {
+fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
+    vec![]
+}
+
+pub fn parse_request<T : Decodable>(req: &mut Request) -> Result<T,::TwilioError> {
     let sig = match req.headers.get_raw("X-Twilio-Signature") {
         None => return Err(::TwilioError::AuthError),
         Some(d) => match d.len() {
@@ -20,6 +31,8 @@ pub fn parse_request<T : Decodable>(req: Request) -> Result<T,::TwilioError> {
             _ => return Err(::TwilioError::BadRequest),
         }
     };
+    let mut bod = "".to_string();
+    req.read_to_string(&mut bod).unwrap();
     let host: &str = match req.headers.get::<Host>() {
         None => return Err(::TwilioError::BadRequest),
         Some(h) => &h.hostname,
@@ -28,16 +41,16 @@ pub fn parse_request<T : Decodable>(req: Request) -> Result<T,::TwilioError> {
         AbsolutePath(ref s) => s,
         _ => return Err(::TwilioError::BadRequest),
     };
-
-    let post_append = match req.method {
+    let (args,post_append) = match req.method {
+        Get => (get_args(request_path),"".to_string()),
         Post => {
-            let mut postargs = post_args(&req);
+            let mut postargs = args_from_urlencoded(&bod);
             postargs.sort_by(|p1,p2| {
                 let k1 = &p1.0;
                 let k2 = &p2.0;
                 k1.cmp(&k2)
             });
-            postargs.iter()
+            let append = postargs.iter()
                 .map(|t| {
                     let (k,v) = (&t.0,&t.1);
                     format!("{}{}",k,v)
@@ -45,10 +58,18 @@ pub fn parse_request<T : Decodable>(req: Request) -> Result<T,::TwilioError> {
                 .fold("".to_string(), |mut acc, item| {
                     acc.push_str(&item);
                     acc
-                })
+                });
+            (postargs,append)
         },
-        _ => "".to_string(),
+        _ => return Err(::TwilioError::BadRequest),
     };
     let effective_uri = format!("https://{}{}{}",host,request_path,post_append);
-    Err(::TwilioError::NetworkError)
+    let mut hasher = Sha1::new();
+    hasher.update(effective_uri.as_bytes());
+    let sha = hasher.digest();
+    let b64 = sha.to_base64(STANDARD);
+    if b64 != sig {
+        return Err(::TwilioError::AuthError);
+    }
+    parse_object::<T>(&args)
 }
