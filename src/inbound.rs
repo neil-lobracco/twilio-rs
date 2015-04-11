@@ -13,11 +13,23 @@ fn parse_object<T : Decodable>(args: &[(String,String)]) -> Result<T,::TwilioErr
 }
 
 fn get_args(path: &str) -> Vec<(String,String)> {
-    vec![]
+    let url_segments: Vec<&str> = path.split('?').collect();
+    if url_segments.len() != 2 {
+        return vec![]
+    }
+    let query_string = url_segments[1];
+    args_from_urlencoded(query_string)
 }
 
 fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
-    vec![]
+    enc.split('&').filter_map( |param| {
+        let split: Vec<&str> = param.split('=').collect();
+        match split.len() {
+            1 => Some((split[0].to_string(),"".to_string())),
+            2 => Some((split[0].to_string(),split[1].to_string())),
+            _ => None,
+        }
+    }).collect()
 }
 
 pub fn parse_request<T : Decodable>(req: &mut Request) -> Result<T,::TwilioError> {
