@@ -8,7 +8,7 @@ use rustc_serialize::Decodable;
 use rustc_serialize::base64::{ToBase64,STANDARD};
 use std::io::Read;
 
-fn parse_object<T : Decodable>(args: &[(String,String)]) -> Result<T,::TwilioError> {
+fn parse_object<T : ::FromMap>(args: &[(String,String)]) -> Result<T,::TwilioError> {
     Err(::TwilioError::NetworkError)
 }
 
@@ -32,7 +32,7 @@ fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
     }).collect()
 }
 
-pub fn parse_request<T : Decodable>(req: &mut Request) -> Result<T,::TwilioError> {
+pub fn parse_request<T : ::FromMap>(req: &mut Request) -> Result<T,::TwilioError> {
     let sig = match req.headers.get_raw("X-Twilio-Signature") {
         None => return Err(::TwilioError::AuthError),
         Some(d) => match d.len() {

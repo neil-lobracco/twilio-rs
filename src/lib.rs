@@ -11,6 +11,7 @@ pub use self::hyper::method::Method::{Post,Get,Put};
 pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
 pub use inbound::{parse_request};
+use std::collections::HashMap;
 
 pub struct Client {
     account_id : String,
@@ -38,6 +39,10 @@ pub enum TwilioError {
     ParsingError,
     AuthError,
     BadRequest,
+}
+
+pub trait FromMap {
+    fn from_map(&HashMap<String,String>) -> Self;
 }
 
 impl Client {
