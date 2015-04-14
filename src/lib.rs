@@ -42,7 +42,7 @@ pub enum TwilioError {
 }
 
 pub trait FromMap {
-    fn from_map(&HashMap<String,String>) -> Self;
+    fn from_map(&HashMap<&str,&str>) -> Result<Self,TwilioError>;
 }
 
 impl Client {

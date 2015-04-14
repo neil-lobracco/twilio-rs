@@ -35,3 +35,36 @@ impl ::Client {
         self.send_request(::Post,"Calls",&opts)
     }
 }
+impl ::FromMap for Call {
+    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Call,::TwilioError> {
+        let from = match m.get("From"){
+            Some(&v) => v,
+            None => return Err(::TwilioError::ParsingError),
+        };
+        let to = match m.get("To"){
+            Some(&v) => v,
+            None => return Err(::TwilioError::ParsingError),
+        };
+        let sid = match m.get("CallSid"){
+            Some(&v) => v,
+            None => return Err(::TwilioError::ParsingError),
+        };
+        let stat = match m.get("Status"){
+            Some(&"queued") => CallStatus::queued,
+            Some(&"ringing") => CallStatus::ringing,
+            Some(&"in-progress") => CallStatus::inprogress,
+            Some(&"canceled") => CallStatus::canceled,
+            Some(&"completed") => CallStatus::completed,
+            Some(&"failed") => CallStatus::failed,
+            Some(&"busy") => CallStatus::busy,
+            Some(&"no-answer") => CallStatus::noanswer,
+            _ => return Err(::TwilioError::ParsingError),
+        };
+        Ok(Call {
+            from: from.to_string(),
+            to: to.to_string(),
+            sid: sid.to_string(),
+            status: stat,
+        })
+    }
+}

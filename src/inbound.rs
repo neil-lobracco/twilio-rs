@@ -4,12 +4,16 @@ use hyper::server::request::Request;
 use hyper::header::Host;
 use hyper::uri::RequestUri::AbsolutePath;
 use hyper::method::Method::{Get,Post};
-use rustc_serialize::Decodable;
 use rustc_serialize::base64::{ToBase64,STANDARD};
 use std::io::Read;
+use std::collections::HashMap;
 
 fn parse_object<T : ::FromMap>(args: &[(String,String)]) -> Result<T,::TwilioError> {
-    Err(::TwilioError::NetworkError)
+    let mut m = HashMap::new();
+    for t in args {
+        m.insert(t.0.as_ref(),t.1.as_ref());
+    }
+    T::from_map(&m)
 }
 
 fn get_args(path: &str) -> Vec<(String,String)> {
