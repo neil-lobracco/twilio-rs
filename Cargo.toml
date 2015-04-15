@@ -13,4 +13,5 @@ keywords = ["twilio","rust"]
 hyper = "*"
 rustc-serialize="*"
 mime = "*"
-sha1 = "*"
+rust-crypto = "*"
+url="*"

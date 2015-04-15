@@ -3,18 +3,18 @@ extern crate rustc_serialize;
 extern crate mime;
 mod message;
 mod call;
-mod inbound;
+mod webhook;
 use std::io::Read;
 use self::hyper::header::{Authorization,Basic};
 use self::hyper::status::StatusCode;
 pub use self::hyper::method::Method::{Post,Get,Put};
 pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
-pub use inbound::{parse_request};
 use std::collections::HashMap;
 
 pub struct Client {
     account_id : String,
+    auth_token : String,
     auth_header : Authorization<Basic>,
 }
 fn url_encode(params: &[(&str,&str)]) -> String {
@@ -49,6 +49,7 @@ impl Client {
     pub fn new(account_id: &str, auth_token: &str) -> Client {
         Client {
             account_id : account_id.to_string(),
+            auth_token : auth_token.to_string(),
             auth_header : basic_auth_header(account_id.to_string(),auth_token.to_string()),
         }
     }

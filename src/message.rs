@@ -24,11 +24,11 @@ pub enum MessageStatus {
 #[derive(RustcDecodable)]
 #[derive(Debug)]
 pub struct Message {
-    from : String,
-    to   : String,
-    body : Option<String>,
-    sid  : String,
-    status : Option<MessageStatus>,
+    pub from : String,
+    pub to   : String,
+    pub body : Option<String>,
+    pub sid  : String,
+    pub status : Option<MessageStatus>,
 }
 impl ::Client {
     pub fn send_message(&self, msg: OutboundMessage) -> Result<Message,::TwilioError> {
@@ -50,11 +50,12 @@ impl ::FromMap for Message {
             Some(&v) => v,
             None => return Err(::TwilioError::ParsingError),
         };
+        let body = m.get("Body");
         Ok(Message {
             from: from.to_string(),
             to: to.to_string(),
             sid: sid.to_string(),
-            body: None,
+            body: body.map(|s| s.to_string()),
             status: None,
         })
     }
