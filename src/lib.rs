@@ -4,6 +4,7 @@ extern crate mime;
 mod message;
 mod call;
 mod webhook;
+pub mod twiml;
 use std::io::Read;
 use self::hyper::header::{Authorization,Basic};
 use self::hyper::status::StatusCode;
