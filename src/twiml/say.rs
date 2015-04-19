@@ -5,9 +5,9 @@ pub enum Voice {
     Alice,
 }
 pub struct Say {
-    txt: String,
-    voice: Voice,
-    language: String,
+    pub txt: String,
+    pub voice: Voice,
+    pub language: String,
 }
 impl Action for Say {
     fn as_twiml(&self) -> String {
@@ -17,10 +17,5 @@ impl Action for Say {
             Voice::Alice => "alice",
         };
         format_xml_string("Say",&vec![("voice",voice_str),("language",&self.language)],&self.txt)
-    }
-}
-impl Say {
-    pub fn new(txt: String, voice: Voice, language: String) -> Say {
-        Say { txt: txt, voice: voice, language: language }
     }
 }

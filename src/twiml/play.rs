@@ -46,8 +46,3 @@ impl Action for Play {
         format_xml_string("Play",&atts,inner)
     }
 }
-impl Play {
-    pub fn new(playable: Playable, loop_count: usize) -> Play {
-        Play { playable: playable, loop_count: loop_count }
-    }
-}

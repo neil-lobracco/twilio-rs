@@ -1,7 +1,7 @@
 use twiml::{Action,format_xml_string,Method};
 pub struct Redirect {
-    url : String,
-    method : Method,
+    pub url : String,
+    pub method : Method,
 }
 impl Action for Redirect {
     fn as_twiml(&self) -> String {
@@ -10,10 +10,5 @@ impl Action for Redirect {
             Method::Post => "POST",
         };
         format_xml_string("Redirect",&vec![("method",method_str)],&self.url)
-    }
-}
-impl Redirect {
-    pub fn new(url: String, method: Method) -> Redirect {
-        Redirect { url: url, method: method }
     }
 }
