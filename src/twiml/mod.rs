@@ -3,11 +3,13 @@ mod redirect;
 mod say;
 mod play;
 mod gather;
+mod record;
 pub use self::message::Message;
 pub use self::redirect::Redirect;
 pub use self::say::{Say,Voice};
 pub use self::play::{Play,Digits,Playable};
 pub use self::gather::{Gather,Prompt};
+pub use self::record::{Record,Transcribe};
 pub trait Action {
     fn as_twiml(&self) -> String;
 }
