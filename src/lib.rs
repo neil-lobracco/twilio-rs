@@ -90,9 +90,9 @@ impl Client {
         Ok(decoded)
     }
 
-    pub fn respond_to_webhook<T:FromMap,F>(&self, mut req: hyper::server::Request, mut res: hyper::server::Response, mut logic:  F)
+    pub fn respond_to_webhook<T:FromMap,F>(&self, req: &mut hyper::server::Request, mut res: hyper::server::Response, mut logic:  F)
     where F: FnMut(T) -> twiml::Twiml {
-        let o: T = match self.parse_request::<T>(&mut req){
+        let o: T = match self.parse_request::<T>(req){
             Err(e) => {
                 println!("{:?}",e);
                 let mut res = res.start().unwrap();

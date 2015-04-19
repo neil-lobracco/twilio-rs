@@ -49,7 +49,7 @@ impl ::FromMap for Call {
             Some(&v) => v,
             None => return Err(::TwilioError::ParsingError),
         };
-        let stat = match m.get("Status"){
+        let stat = match m.get("CallStatus"){
             Some(&"queued") => CallStatus::queued,
             Some(&"ringing") => CallStatus::ringing,
             Some(&"in-progress") => CallStatus::inprogress,
