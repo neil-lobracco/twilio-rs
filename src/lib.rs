@@ -59,7 +59,6 @@ impl Client {
         let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
         let mut http_client = hyper::Client::new();
         let post_body: &str = &*url_encode(params);
-        println!("POST body: '{}'",post_body);
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();
         let content_type_header = hyper::header::ContentType(mime);
         let req = http_client
@@ -79,7 +78,6 @@ impl Client {
         match resp.status {
             StatusCode::Created | StatusCode::Ok => (),
             _ => {
-                println!("{:?}",body_str);
                 return Err(TwilioError::HTTPError)
             }
         };
@@ -93,8 +91,8 @@ impl Client {
     pub fn respond_to_webhook<T:FromMap,F>(&self, req: &mut hyper::server::Request, mut res: hyper::server::Response, mut logic:  F)
     where F: FnMut(T) -> twiml::Twiml {
         let o: T = match self.parse_request::<T>(req){
-            Err(e) => {
-                println!("{:?}",e);
+            Err(_) => {
+                *res.status_mut() = hyper::BadRequest;
                 let mut res = res.start().unwrap();
                 res.write_all("Error.".as_bytes()).unwrap();
                 res.end().unwrap();
