@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Call",""],["Client",""],["Message",""],["OutboundCall",""],["OutboundMessage",""]],"trait":[["FromMap",""]],"enum":[["TwilioError",""]],"mod":[["twiml",""]]});
