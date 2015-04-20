@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HMAC","Provides HMAC computation."]],"fn":[["hmac","Computes the HMAC of the `data` with the hash `t` and `key`."]]});

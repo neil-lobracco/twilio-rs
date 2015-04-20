@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Digits",""],["Gather",""],["Message",""],["Play",""],["Record",""],["Redirect",""],["Say",""],["Sms",""],["Twiml",""]],"enum":[["Method",""],["Playable",""],["Prompt",""],["Transcribe",""],["Voice",""]],"trait":[["Action",""]]});
