@@ -24,7 +24,7 @@ impl Twiml {
     pub fn new() -> Twiml {
         Twiml { body : "".to_string() }
     }
-    pub fn add(&mut self, a: &Action) -> &Self {
+    pub fn add(&mut self, a: &Action) -> &mut Twiml {
         let twiml = a.as_twiml();
         self.body.push_str((&twiml as &AsRef<str>).as_ref());
         self
