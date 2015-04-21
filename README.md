@@ -22,7 +22,6 @@ Of course, much of our interaction with Twilio is by defining resources that res
 			let mut t = Twiml::new();
             t.add(&twiml::Message {txt: format!("You told me: '{}'",msg.body.unwrap())});
             t
-            });
 		});
 	}
 
@@ -34,7 +33,6 @@ Alternatively, to respond to a voice callback with a message:
 			let mut t = Twiml::new();
 			t.add(&Say{txt: "Thanks for using twilio-rs. Bye!".to_string(),voice: Woman,language: "en".to_string()});
             t
-            });
 		});
 	}
 
