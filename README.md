@@ -1,5 +1,6 @@
 twilio-rs
 =========
+[![](http://meritbadge.herokuapp.com/twilio)](https://crates.io/crates/twilio)
 `twilio-rs` is a Rust library for integrating with Twilio. It tries to present an idiomatic Rust interface for making requests to the Twilio API, and validating, parsing, and replying to webhooks that Twilio makes to your server.
 
 First, you'll need to create a Twilio client:
