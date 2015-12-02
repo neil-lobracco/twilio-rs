@@ -34,22 +34,8 @@ fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
 
 impl ::Client {
     pub fn parse_request<T : ::FromMap>(&self, req: &mut Request) -> Result<T,::TwilioError> {
-        let sig = match req.headers.get_raw("X-Twilio-Signature") {
-            None => return Err(::TwilioError::AuthError),
-            Some(d) => match d.len() {
-                1 => match d[0].from_base64() {
-                    Ok(v) => v,
-                    Err(_) => return Err(::TwilioError::BadRequest),
-                },
-                _ => return Err(::TwilioError::BadRequest),
-            }
-        };
         let mut bod = "".to_string();
         req.read_to_string(&mut bod).unwrap();
-        let host: &str = match req.headers.get::<Host>() {
-            None => return Err(::TwilioError::BadRequest),
-            Some(h) => &h.hostname,
-        };
         let request_path: &str = match req.uri {
             AbsolutePath(ref s) => s,
             _ => return Err(::TwilioError::BadRequest),
@@ -76,13 +62,34 @@ impl ::Client {
             },
             _ => return Err(::TwilioError::BadRequest),
         };
-        let effective_uri = format!("https://{}{}{}",host,request_path,post_append);
-        let mut hmac = Hmac::new(Sha1::new(),self.auth_token.as_bytes());
-        hmac.input(effective_uri.as_bytes());
-        let result = hmac.result();
-        let expected = MacResult::new(&sig);
-        if result != expected {
-            return Err(::TwilioError::AuthError);
+        // Twilio can provide encrypted communication with an application server, but only for
+        // a server using HTTPS with a certificate signed by a Certificate Authority.
+        // For details, see: https://www.twilio.com/docs/api/security
+        // The following code performs the authentication for this library. To bypass this check,
+        // call disable_authentication() on the Client. 
+        if self.authenticate {
+            let sig = match req.headers.get_raw("X-Twilio-Signature") {
+                None => return Err(::TwilioError::AuthError),
+                Some(d) => match d.len() {
+                    1 => match d[0].from_base64() {
+                        Ok(v) => v,
+                        Err(_) => return Err(::TwilioError::BadRequest),
+                    },
+                    _ => return Err(::TwilioError::BadRequest),
+                }
+            };
+            let host: &str = match req.headers.get::<Host>() {
+                None => return Err(::TwilioError::BadRequest),
+                Some(h) => &h.hostname,
+            };
+            let effective_uri = format!("https://{}{}{}",host,request_path,post_append);
+            let mut hmac = Hmac::new(Sha1::new(),self.auth_token.as_bytes());
+            hmac.input(effective_uri.as_bytes());
+            let result = hmac.result();
+            let expected = MacResult::new(&sig);
+            if result != expected {
+                return Err(::TwilioError::AuthError);
+            }
         }
         parse_object::<T>(&args)
     }

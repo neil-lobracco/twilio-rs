@@ -11,7 +11,9 @@ use twilio::twiml::{Twiml,Voice,Say};
 fn responder(mut req: Request, res: Response) {
     let app_id = &env::var("TWILIO_APP_ID").unwrap();
     let auth_token = &env::var("TWILIO_AUTH_TOKEN").unwrap();
-    let client = twilio::Client::new(app_id,auth_token);
+    let mut client = twilio::Client::new(app_id,auth_token);
+    // With a test application server using HTTP rather than HTTPS, uncomment the following line
+    //client.disable_authentication();
     let cloned_uri = match req.uri {
         AbsolutePath(ref path) => path.clone(),
         _ => panic!("Unexpected path type."),
