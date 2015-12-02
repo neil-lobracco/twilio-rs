@@ -35,7 +35,7 @@ fn responder(mut req: Request, res: Response) {
 }
 
 fn main() {
-    let _listening = hyper::Server::http(responder)
-        .listen("127.0.0.1:3000").unwrap();
+    let server = hyper::Server::http("127.0.0.1:3000").unwrap();
+    let _guard = server.handle(responder);
     println!("Listening on http://127.0.0.1:3000");
 }
