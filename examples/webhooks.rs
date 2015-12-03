@@ -2,14 +2,18 @@ extern crate hyper;
 extern crate twilio;
 extern crate mime;
 
+use std::env;
+
 use hyper::server::{Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
 use twilio::twiml::{Twiml,Voice,Say};
 
 fn responder(mut req: Request, res: Response) {
-    let app_id = "<app-id>";
-    let auth_token = "<auth-token>";
-    let client = twilio::Client::new(app_id,auth_token);
+    let app_id = &env::var("TWILIO_APP_ID").unwrap();
+    let auth_token = &env::var("TWILIO_AUTH_TOKEN").unwrap();
+    let mut client = twilio::Client::new(app_id,auth_token);
+    // With a test application server using HTTP rather than HTTPS, uncomment the following line
+    //client.disable_authentication();
     let cloned_uri = match req.uri {
         AbsolutePath(ref path) => path.clone(),
         _ => panic!("Unexpected path type."),
@@ -35,7 +39,7 @@ fn responder(mut req: Request, res: Response) {
 }
 
 fn main() {
-    let _listening = hyper::Server::http(responder)
-        .listen("127.0.0.1:3000").unwrap();
+    let server = hyper::Server::http("127.0.0.1:3000").unwrap();
+    let _guard = server.handle(responder);
     println!("Listening on http://127.0.0.1:3000");
 }

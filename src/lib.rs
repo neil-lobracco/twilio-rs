@@ -18,6 +18,7 @@ pub struct Client {
     account_id : String,
     auth_token : String,
     auth_header : Authorization<Basic>,
+    authenticate : bool,
 }
 fn url_encode(params: &[(&str,&str)]) -> String {
     params.iter().map(|&t| {
@@ -53,8 +54,14 @@ impl Client {
             account_id : account_id.to_string(),
             auth_token : auth_token.to_string(),
             auth_header : basic_auth_header(account_id.to_string(),auth_token.to_string()),
+            authenticate : true,
         }
     }
+
+    pub fn disable_authentication(&mut self) {
+        self.authenticate = false;
+    }
+
     fn send_request<T : rustc_serialize::Decodable>(&self, method: hyper::method::Method, endpoint: &str, params: &[(&str,&str)]) -> Result<T,TwilioError> {
         let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
         let mut http_client = hyper::Client::new();
