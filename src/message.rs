@@ -37,7 +37,7 @@ impl ::Client {
     }
 }
 impl ::FromMap for Message {
-    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Message,::TwilioError> {
+    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Box<Message>,::TwilioError> {
         let from = match m.get("From"){
             Some(&v) => v,
             None => return Err(::TwilioError::ParsingError),
@@ -51,12 +51,12 @@ impl ::FromMap for Message {
             None => return Err(::TwilioError::ParsingError),
         };
         let body = m.get("Body");
-        Ok(Message {
+        Ok(Box::new(Message {
             from: from.to_string(),
             to: to.to_string(),
             sid: sid.to_string(),
             body: body.map(|s| s.to_string()),
             status: None,
-        })
+        }))
     }
 }

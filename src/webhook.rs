@@ -11,7 +11,7 @@ use rustc_serialize::base64::FromBase64;
 use std::io::Read;
 use std::collections::HashMap;
 
-fn parse_object<T : ::FromMap>(args: &[(String,String)]) -> Result<T,::TwilioError> {
+fn parse_object<T : ::FromMap>(args: &[(String,String)]) -> Result<Box<T>,::TwilioError> {
     let mut m = HashMap::new();
     for t in args {
         m.insert(t.0.as_ref(),t.1.as_ref());
@@ -33,7 +33,7 @@ fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
 }
 
 impl ::Client {
-    pub fn parse_request<T : ::FromMap>(&self, req: &mut Request) -> Result<T,::TwilioError> {
+    pub fn parse_request<T : ::FromMap>(&self, req: &mut Request) -> Result<Box<T>,::TwilioError> {
         let sig = match req.headers.get_raw("X-Twilio-Signature") {
             None => return Err(::TwilioError::AuthError),
             Some(d) => match d.len() {
