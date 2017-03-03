@@ -44,7 +44,7 @@ pub enum TwilioError {
 }
 
 pub trait FromMap {
-    fn from_map(&HashMap<&str,&str>) -> Result<Self,TwilioError>;
+    fn from_map(&HashMap<&str,&str>) -> Result<Box<Self>,TwilioError>;
 }
 
 impl Client {
@@ -98,7 +98,7 @@ impl Client {
                 res.end().unwrap();
                 return
             },
-                Ok(obj) => obj,
+                Ok(obj) => *obj,
         };
         let t = logic(o);
         let body = t.as_twiml();

@@ -36,7 +36,7 @@ impl ::Client {
     }
 }
 impl ::FromMap for Call {
-    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Call,::TwilioError> {
+    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Box<Call>,::TwilioError> {
         let from = match m.get("From"){
             Some(&v) => v,
             None => return Err(::TwilioError::ParsingError),
@@ -60,11 +60,11 @@ impl ::FromMap for Call {
             Some(&"no-answer") => CallStatus::noanswer,
             _ => return Err(::TwilioError::ParsingError),
         };
-        Ok(Call {
+        Ok(Box::new(Call {
             from: from.to_string(),
             to: to.to_string(),
             sid: sid.to_string(),
             status: stat,
-        })
+        }))
     }
 }
