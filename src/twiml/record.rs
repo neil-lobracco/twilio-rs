@@ -57,7 +57,7 @@ impl Action for Record {
                 attrs.push(("transcribeCallback",s.as_ref()));
             },
         };
-        format_xml_string("Gather",&attrs,"")
+        format_xml_string("Record",&attrs,"")
     }
 }
 
