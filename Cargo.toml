@@ -10,8 +10,8 @@ authors = ["Neil LoBracco <neil.lobracco@gmail.com>"]
 keywords = ["twilio","rust"]
 
 [dependencies]
-hyper = "*"
-rustc-serialize="*"
-mime = "*"
-rust-crypto = "*"
-url="*"
+hyper = "^0.10"
+rustc-serialize="^0.3"
+mime = "^0.2"
+rust-crypto = "^0.2"
+url="^1.0"
