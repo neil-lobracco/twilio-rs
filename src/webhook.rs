@@ -29,7 +29,7 @@ fn get_args(path: &str) -> Vec<(String,String)> {
 }
 
 fn args_from_urlencoded(enc: &str) -> Vec<(String,String)> {
-    url::form_urlencoded::parse(enc.as_bytes())
+    url::form_urlencoded::parse(enc.as_bytes()).into_owned().collect::<Vec<(String, String)>>()
 }
 
 impl ::Client {
