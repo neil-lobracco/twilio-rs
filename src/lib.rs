@@ -1,4 +1,5 @@
 extern crate hyper;
+extern crate hyper_native_tls;
 extern crate rustc_serialize;
 extern crate mime;
 mod message;
@@ -7,8 +8,10 @@ mod webhook;
 pub mod twiml;
 use std::io::Read;
 use self::hyper::header::{Authorization,Basic};
+use hyper::net::HttpsConnector;
 use self::hyper::status::StatusCode;
 pub use self::hyper::method::Method::{Post,Get,Put};
+use hyper_native_tls::NativeTlsClient;
 pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
 use std::collections::HashMap;
@@ -57,7 +60,9 @@ impl Client {
     }
     fn send_request<T : rustc_serialize::Decodable>(&self, method: hyper::method::Method, endpoint: &str, params: &[(&str,&str)]) -> Result<T,TwilioError> {
         let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
-        let mut http_client = hyper::Client::new();
+        let ssl = NativeTlsClient::new().unwrap();
+        let connector = HttpsConnector::new(ssl);
+        let mut http_client = hyper::Client::with_connector(connector);
         let post_body: &str = &*url_encode(params);
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();
         let content_type_header = hyper::header::ContentType(mime);
