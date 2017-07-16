@@ -8,8 +8,7 @@ impl<'a> OutboundMessage<'a> {
         OutboundMessage { from: from, to: to, body: body }
     }
 }
-#[derive(RustcDecodable)]
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 #[allow(non_camel_case_types)]
 pub enum MessageStatus {
     queued,
@@ -21,8 +20,8 @@ pub enum MessageStatus {
     receiving,
     received,
 }
-#[derive(RustcDecodable)]
-#[derive(Debug)]
+
+#[derive(Debug, Deserialize)]
 pub struct Message {
     pub from : String,
     pub to   : String,
@@ -30,12 +29,14 @@ pub struct Message {
     pub sid  : String,
     pub status : Option<MessageStatus>,
 }
+
 impl ::Client {
     pub fn send_message(&self, msg: OutboundMessage) -> Result<Message,::TwilioError> {
         let opts = [("To",&*msg.to),("From",&*msg.from),("Body",&*msg.body)];
         self.send_request(::Post,"Messages",&opts)
     }
 }
+
 impl ::FromMap for Message {
     fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Box<Message>,::TwilioError> {
         let from = match m.get("From"){

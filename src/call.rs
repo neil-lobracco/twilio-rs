@@ -3,13 +3,14 @@ pub struct OutboundCall<'a> {
     pub to   : &'a str,
     pub url : &'a str,
 }
+
 impl<'a> OutboundCall<'a> {
     pub fn new(from: &'a str,to: &'a str, url: &'a str) -> OutboundCall<'a> {
         OutboundCall { from: from, to: to, url: url }
     }
 }
-#[derive(RustcDecodable)]
-#[derive(Debug)]
+
+#[derive(Debug, Deserialize)]
 #[allow(non_camel_case_types)]
 pub enum CallStatus {
     queued,
@@ -21,20 +22,22 @@ pub enum CallStatus {
     busy,
     noanswer,
 }
-#[derive(RustcDecodable)]
-#[derive(Debug)]
+
+#[derive(Debug, Deserialize)]
 pub struct Call {
     from : String,
     to   : String,
     sid  : String,
     status : CallStatus,
 }
+
 impl ::Client {
     pub fn make_call(&self, call: OutboundCall) -> Result<Call,::TwilioError> {
         let opts = [("To",&*call.to),("From",&*call.from),("Url",&*call.url)];
         self.send_request(::Post,"Calls",&opts)
     }
 }
+
 impl ::FromMap for Call {
     fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Box<Call>,::TwilioError> {
         let from = match m.get("From"){
