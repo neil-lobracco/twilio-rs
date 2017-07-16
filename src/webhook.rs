@@ -1,5 +1,6 @@
 extern crate crypto;
 extern crate url;
+extern crate base64;
 use self::crypto::hmac::Hmac;
 use self::crypto::sha1::Sha1;
 use self::crypto::mac::{MacResult,Mac};
@@ -7,7 +8,6 @@ use hyper::server::request::Request;
 use hyper::header::Host;
 use hyper::uri::RequestUri::AbsolutePath;
 use hyper::method::Method::{Get,Post};
-use rustc_serialize::base64::FromBase64;
 use std::io::Read;
 use std::collections::HashMap;
 
@@ -37,7 +37,7 @@ impl ::Client {
         let sig = match req.headers.get_raw("X-Twilio-Signature") {
             None => return Err(::TwilioError::AuthError),
             Some(d) => match d.len() {
-                1 => match d[0].from_base64() {
+                1 => match base64::decode(&d[0]) {
                     Ok(v) => v,
                     Err(_) => return Err(::TwilioError::BadRequest),
                 },

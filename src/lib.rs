@@ -1,7 +1,10 @@
 extern crate hyper;
 extern crate hyper_native_tls;
-extern crate rustc_serialize;
 extern crate mime;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 mod message;
 mod call;
 mod webhook;
@@ -22,6 +25,7 @@ pub struct Client {
     auth_token : String,
     auth_header : Authorization<Basic>,
 }
+
 fn url_encode(params: &[(&str,&str)]) -> String {
     params.iter().map(|&t| {
         let (k,v) = t;
@@ -58,7 +62,10 @@ impl Client {
             auth_header : basic_auth_header(account_id.to_string(),auth_token.to_string()),
         }
     }
-    fn send_request<T : rustc_serialize::Decodable>(&self, method: hyper::method::Method, endpoint: &str, params: &[(&str,&str)]) -> Result<T,TwilioError> {
+
+    fn send_request<T>(&self, method: hyper::method::Method, endpoint: &str, params: &[(&str,&str)]) -> Result<T, TwilioError>
+        where T: serde::de::DeserializeOwned,
+    {
         let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
         let ssl = NativeTlsClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
@@ -86,7 +93,7 @@ impl Client {
                 return Err(TwilioError::HTTPError)
             }
         };
-        let decoded: T = match rustc_serialize::json::decode(&body_str) {
+        let decoded: T = match serde_json::from_str(&body_str) {
             Ok(obj) => obj,
             Err(_)  => return Err(TwilioError::ParsingError),
         };
