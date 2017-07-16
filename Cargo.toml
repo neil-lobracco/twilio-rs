@@ -21,4 +21,4 @@ serde_json = "1.0.2"
 base64 = "0.6"
 
 [dev-dependencies]
-dotenv = "*"
+dotenv = "0.10.1"
