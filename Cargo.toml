@@ -6,7 +6,7 @@ description = "Rust bindings for the Twilio API"
 readme = "README.md"
 repository = "https://github.com/neil-lobracco/twilio-rs"
 license = "MIT"
-authors = ["Neil LoBracco <neil.lobracco@gmail.com>, Lance Carlson <lancecarlson@gmail.com>"]
+authors = ["Neil LoBracco <neil.lobracco@gmail.com>", "Lance Carlson <lancecarlson@gmail.com>"]
 keywords = ["twilio","rust"]
 
 [dependencies]
