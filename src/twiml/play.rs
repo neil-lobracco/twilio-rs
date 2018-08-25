@@ -9,6 +9,9 @@ impl Digits {
     pub fn new() -> Digits {
         Digits { s : "".to_string() }
     }
+    pub fn from(d: u32) -> Digits {
+        Digits { s: d.to_string() }
+    }
     pub fn add(&mut self, d: u32) -> &mut Digits {
         self.s.push(from_digit(d,10).unwrap());
         self
@@ -28,8 +31,8 @@ pub enum Playable {
 }
 
 pub struct Play {
-    playable: Playable,
-    loop_count : usize,
+    pub playable: Playable,
+    pub loop_count : usize,
 }
 impl Action for Play {
     fn as_twiml(&self) -> String {
