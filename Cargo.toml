@@ -11,7 +11,7 @@ keywords = ["twilio","rust"]
 
 [dependencies]
 hyper = "^0.10"
-hyper-native-tls = "^0.2"
+hyper-native-tls = "^0.3"
 mime = "^0.2"
 rust-crypto = "^0.2"
 url="^1.0"
