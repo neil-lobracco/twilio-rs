@@ -8,7 +8,7 @@ impl<'a> OutboundMessage<'a> {
         OutboundMessage { from: from, to: to, body: body }
     }
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
 pub enum MessageStatus {
     queued,

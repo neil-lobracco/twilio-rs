@@ -76,7 +76,6 @@ impl Error for TwilioError {
     }
 }
 
-
 pub trait FromMap {
     fn from_map(&HashMap<&str,&str>) -> Result<Box<Self>,TwilioError>;
 }
