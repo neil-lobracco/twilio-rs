@@ -45,7 +45,7 @@ fn basic_auth_header(username: String, password: String) -> Authorization<Basic>
     Authorization(Basic { username: username, password: Some(password) })
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum TwilioError {
     NetworkError,
     HTTPError,
