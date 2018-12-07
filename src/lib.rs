@@ -19,6 +19,8 @@ pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
 use std::collections::HashMap;
 use std::io::Write;
+use std::error::Error;
+use std::fmt;
 
 pub struct Client {
     account_id : String,
@@ -49,6 +51,31 @@ pub enum TwilioError {
     AuthError,
     BadRequest,
 }
+
+impl fmt::Display for TwilioError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}", self.description()
+        )?;
+
+        Ok(())
+    }
+}
+
+impl Error for TwilioError {
+    fn description(&self) -> &str {
+        use TwilioError::*;
+        match self {
+            NetworkError => "NetworkError",
+            HTTPError => "HTTPError",
+            ParsingError => "ParsingError",
+            AuthError => "AuthError",
+            BadRequest => "BadRequest",
+        }
+    }
+}
+
 
 pub trait FromMap {
     fn from_map(&HashMap<&str,&str>) -> Result<Box<Self>,TwilioError>;
