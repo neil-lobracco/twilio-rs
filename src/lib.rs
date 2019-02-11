@@ -5,6 +5,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate url;
 
 mod message;
 mod call;
@@ -22,6 +23,7 @@ pub use call::{Call, OutboundCall};
 use std::collections::HashMap;
 use std::io::Write;
 use std::error::Error;
+use url::form_urlencoded;
 use std::fmt;
 
 pub struct Client {
@@ -31,14 +33,13 @@ pub struct Client {
 }
 
 fn url_encode(params: &[(&str, &str)]) -> String {
-    params.iter().map(|&t| {
-        let (k, v) = t;
-        format!("{}={}", k, v)
-    }).fold("".to_string(), |mut acc, item| {
-        acc.push_str(&item);
-        acc.push_str("&");
-        acc
-    })
+    let mut builder = form_urlencoded::Serializer::new(String::new());
+
+    for (ref key, ref value) in params {
+        builder.append_pair(key, value);
+    }
+    builder.finish()
+
 }
 
 fn basic_auth_header(username: String, password: String) -> Authorization<Basic> {
@@ -87,7 +88,7 @@ impl From<serde_json::Error> for TwilioError{
 }
 
 pub trait FromMap {
-    fn from_map(&HashMap<&str, &str>) -> Result<Box<Self>, TwilioError>;
+    fn from_map(_: &HashMap<&str, &str>) -> Result<Box<Self>, TwilioError>;
 }
 
 impl Client {
