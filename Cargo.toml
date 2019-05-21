@@ -10,14 +10,13 @@ authors = ["Neil LoBracco <neil.lobracco@gmail.com>", "Lance Carlson <lancecarls
 keywords = ["twilio","rust"]
 
 [dependencies]
-hyper = "^0.10"
-hyper-native-tls = "^0.3"
+reqwest="0.9"
 mime = "^0.2"
 rust-crypto = "^0.2"
 url="^1.0"
-serde = "1.0.10"
-serde_derive = "1.0.10"
-serde_json = "1.0.2"
+serde = "^1.0"
+serde_derive = "^1.0"
+serde_json = "^1.0"
 base64 = "0.6"
 
 [dev-dependencies]
