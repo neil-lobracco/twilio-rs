@@ -14,5 +14,5 @@ fn send_sms() {
     let to = env::var("TO").expect("Find TO environment variable");
 
     let client = Client::new(&account_id, &auth_token);
-    client.send_message(OutboundMessage::new(&from, &to, "Hello, World!")).expect("to send message");
+    client.send_message(OutboundMessage::new(&from, &to, "Hello, World?! &Put in some +special characters??")).expect("to send message");
 }
