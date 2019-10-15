@@ -2,13 +2,15 @@ extern crate hyper;
 extern crate twilio;
 extern crate mime;
 
+use std::env;
+
 use hyper::server::{Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
 use twilio::twiml::{Twiml,Voice,Say};
 
 fn responder(mut req: Request, res: Response) {
-    let app_id = "<app-id>";
-    let auth_token = "<auth-token>";
+    let app_id = &env::var("TWILIO_APP_ID").unwrap();
+    let auth_token = &env::var("TWILIO_AUTH_TOKEN").unwrap();
     let client = twilio::Client::new(app_id,auth_token);
     let cloned_uri = match req.uri {
         AbsolutePath(ref path) => path.clone(),
