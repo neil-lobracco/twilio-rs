@@ -69,7 +69,7 @@ impl Client {
         let url = format!("https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",self.account_id,endpoint);
         let ssl = NativeTlsClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
-        let mut http_client = hyper::Client::with_connector(connector);
+        let http_client = hyper::Client::with_connector(connector);
         let post_body: &str = &*url_encode(params);
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();
         let content_type_header = hyper::header::ContentType(mime);
