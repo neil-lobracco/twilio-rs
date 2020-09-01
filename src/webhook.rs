@@ -4,13 +4,9 @@ use crypto::mac::{Mac, MacResult};
 use crypto::sha1::Sha1;
 use headers::{HeaderMapExt, Host};
 use hyper::{Body, Method, Request};
-use std::collections::HashMap;
 
 fn parse_object<T: FromMap>(args: &[(String, String)]) -> Result<Box<T>, TwilioError> {
-    let mut m = HashMap::new();
-    for t in args {
-        m.insert(t.0.as_ref(), t.1.as_ref());
-    }
+    let m = args.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     T::from_map(&m)
 }
 
