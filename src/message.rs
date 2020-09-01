@@ -7,11 +7,13 @@ pub struct OutboundMessage<'a> {
     pub to: &'a str,
     pub body: &'a str,
 }
+
 impl<'a> OutboundMessage<'a> {
     pub fn new(from: &'a str, to: &'a str, body: &'a str) -> OutboundMessage<'a> {
         OutboundMessage { from, to, body }
     }
 }
+
 #[derive(Debug, Deserialize)]
 #[allow(non_camel_case_types)]
 pub enum MessageStatus {

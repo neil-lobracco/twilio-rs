@@ -1,14 +1,17 @@
 use super::{format_xml_string, Action};
+
 pub enum Voice {
     Man,
     Woman,
     Alice,
 }
+
 pub struct Say {
     pub txt: String,
     pub voice: Voice,
     pub language: String,
 }
+
 impl Action for Say {
     fn as_twiml(&self) -> String {
         let voice_str = match self.voice {

@@ -5,6 +5,7 @@ mod record;
 mod redirect;
 mod say;
 mod sms;
+
 pub use self::gather::{Gather, Prompt};
 pub use self::message::Message;
 pub use self::play::{Digits, Play, Playable};
@@ -12,6 +13,7 @@ pub use self::record::{Record, Transcribe};
 pub use self::redirect::Redirect;
 pub use self::say::{Say, Voice};
 pub use self::sms::Sms;
+
 pub trait Action {
     fn as_twiml(&self) -> String;
 }
@@ -26,11 +28,13 @@ impl Twiml {
             body: "".to_string(),
         }
     }
+
     pub fn add(&mut self, a: &dyn Action) -> &mut Twiml {
         let twiml = a.as_twiml();
         self.body.push_str((&twiml as &dyn AsRef<str>).as_ref());
         self
     }
+
     pub fn as_twiml(&self) -> String {
         let b: &str = self.body.as_ref();
         format!(

@@ -31,6 +31,7 @@ pub struct Play {
     playable: Playable,
     loop_count: usize,
 }
+
 impl Action for Play {
     fn as_twiml(&self) -> String {
         let loop_string = format!("{}", self.loop_count);
