@@ -1,4 +1,4 @@
-use super::{Action,format_xml_string,Method};
+use super::{format_xml_string, Action, Method};
 use std::default::Default;
 
 pub enum Transcribe {
@@ -20,49 +20,57 @@ pub struct Record {
 
 impl Action for Record {
     fn as_twiml(&self) -> String {
-        let timeout_string = format!("{}",self.timeout_seconds);
+        let timeout_string = format!("{}", self.timeout_seconds);
         let finish_string = self.finish_on_key.to_string();
-        let length_string = format!("{}",self.max_length_seconds);
+        let length_string = format!("{}", self.max_length_seconds);
         let mut attrs = Vec::new();
         let method_str = match self.method {
             Method::Get => "GET",
             Method::Post => "POST",
         };
-        attrs.push(("method",method_str));
+        attrs.push(("method", method_str));
         if let Some(ref a) = self.action {
-            attrs.push(("action",a));
+            attrs.push(("action", a));
         }
-        attrs.push(("timeout",timeout_string.as_ref()));
-        attrs.push(("finishOnKey",finish_string.as_ref()));
-        attrs.push(("maxLength",length_string.as_ref()));
-        attrs.push(("playBeep",if self.play_beep {
-            "true"
-        } else {
-            "false"
-        }));
-        attrs.push(("trim", if self.trim {
-            "trim-silence"
-        } else {
-            "do-not-trim"
-        }));
+        attrs.push(("timeout", timeout_string.as_ref()));
+        attrs.push(("finishOnKey", finish_string.as_ref()));
+        attrs.push(("maxLength", length_string.as_ref()));
+        attrs.push(("playBeep", if self.play_beep { "true" } else { "false" }));
+        attrs.push((
+            "trim",
+            if self.trim {
+                "trim-silence"
+            } else {
+                "do-not-trim"
+            },
+        ));
         match self.transcribe {
             Transcribe::DontTranscribe => {
-                attrs.push(("transcribe","false"));
-            },
+                attrs.push(("transcribe", "false"));
+            }
             Transcribe::StoreTranscription => {
-                attrs.push(("transcribe","true"));
-            },
+                attrs.push(("transcribe", "true"));
+            }
             Transcribe::CallbackTranscription(ref s) => {
                 /* transcribe=true is implied in this case */
-                attrs.push(("transcribeCallback",s.as_ref()));
-            },
+                attrs.push(("transcribeCallback", s.as_ref()));
+            }
         };
-        format_xml_string("Record",&attrs,"")
+        format_xml_string("Record", &attrs, "")
     }
 }
 
 impl Default for Record {
     fn default() -> Record {
-        Record { action: None, method: Method::Post, timeout_seconds: 5, finish_on_key: '*', max_length_seconds: 3600, transcribe: Transcribe::DontTranscribe, play_beep: true, trim: true }
+        Record {
+            action: None,
+            method: Method::Post,
+            timeout_seconds: 5,
+            finish_on_key: '*',
+            max_length_seconds: 3600,
+            transcribe: Transcribe::DontTranscribe,
+            play_beep: true,
+            trim: true,
+        }
     }
 }

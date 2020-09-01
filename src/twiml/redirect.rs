@@ -1,7 +1,7 @@
-use super::{Action,format_xml_string,Method};
+use super::{format_xml_string, Action, Method};
 pub struct Redirect {
-    pub url : String,
-    pub method : Method,
+    pub url: String,
+    pub method: Method,
 }
 impl Action for Redirect {
     fn as_twiml(&self) -> String {
@@ -9,6 +9,6 @@ impl Action for Redirect {
             Method::Get => "GET",
             Method::Post => "POST",
         };
-        format_xml_string("Redirect",&vec![("method",method_str)],&self.url)
+        format_xml_string("Redirect", &vec![("method", method_str)], &self.url)
     }
 }

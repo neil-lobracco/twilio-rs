@@ -1,10 +1,10 @@
-use serde_derive::Deserialize;
 use crate::{Client, FromMap, Post, TwilioError};
+use serde_derive::Deserialize;
 
 pub struct OutboundCall<'a> {
-    pub from : &'a str,
-    pub to   : &'a str,
-    pub url : &'a str,
+    pub from: &'a str,
+    pub to: &'a str,
+    pub url: &'a str,
 }
 
 impl<'a> OutboundCall<'a> {
@@ -28,34 +28,38 @@ pub enum CallStatus {
 
 #[derive(Debug, Deserialize)]
 pub struct Call {
-    from : String,
-    to   : String,
-    sid  : String,
-    status : CallStatus,
+    from: String,
+    to: String,
+    sid: String,
+    status: CallStatus,
 }
 
 impl Client {
     pub fn make_call(&self, call: OutboundCall) -> Result<Call, TwilioError> {
-        let opts = [("To",&*call.to),("From",&*call.from),("Url",&*call.url)];
-        self.send_request(Post,"Calls",&opts)
+        let opts = [
+            ("To", &*call.to),
+            ("From", &*call.from),
+            ("Url", &*call.url),
+        ];
+        self.send_request(Post, "Calls", &opts)
     }
 }
 
 impl FromMap for Call {
-    fn from_map(m: &::std::collections::HashMap<&str,&str>) -> Result<Box<Call>, TwilioError> {
-        let from = match m.get("From"){
+    fn from_map(m: &::std::collections::HashMap<&str, &str>) -> Result<Box<Call>, TwilioError> {
+        let from = match m.get("From") {
             Some(&v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let to = match m.get("To"){
+        let to = match m.get("To") {
             Some(&v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let sid = match m.get("CallSid"){
+        let sid = match m.get("CallSid") {
             Some(&v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let stat = match m.get("CallStatus"){
+        let stat = match m.get("CallStatus") {
             Some(&"queued") => CallStatus::queued,
             Some(&"ringing") => CallStatus::ringing,
             Some(&"in-progress") => CallStatus::inprogress,

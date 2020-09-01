@@ -1,4 +1,4 @@
-use super::{Action,format_xml_string};
+use super::{format_xml_string, Action};
 pub enum Voice {
     Man,
     Woman,
@@ -16,6 +16,10 @@ impl Action for Say {
             Voice::Woman => "woman",
             Voice::Alice => "alice",
         };
-        format_xml_string("Say",&vec![("voice",voice_str),("language",&self.language)],&self.txt)
+        format_xml_string(
+            "Say",
+            &vec![("voice", voice_str), ("language", &self.language)],
+            &self.txt,
+        )
     }
 }
