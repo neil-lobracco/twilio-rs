@@ -1,5 +1,5 @@
 use crate::{Client, FromMap, TwilioError, POST};
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::collections::BTreeMap;
 
 pub struct OutboundMessage<'a> {
