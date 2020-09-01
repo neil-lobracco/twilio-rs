@@ -1,19 +1,12 @@
-extern crate hyper;
-extern crate hyper_native_tls;
-extern crate mime;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
 mod message;
 mod call;
 mod webhook;
 pub mod twiml;
 use std::io::Read;
-use self::hyper::header::{Authorization,Basic};
+use hyper::header::{Authorization,Basic};
 use hyper::net::HttpsConnector;
-use self::hyper::status::StatusCode;
-pub use self::hyper::method::Method::{Post,Get,Put};
+use hyper::status::StatusCode;
+pub use hyper::method::Method::{Post,Get,Put};
 use hyper_native_tls::NativeTlsClient;
 pub use message::{Message,OutboundMessage};
 pub use call::{Call,OutboundCall};
@@ -38,7 +31,7 @@ fn url_encode(params: &[(&str,&str)]) -> String {
 }
 
 fn basic_auth_header(username: String, password: String) -> Authorization<Basic> {
-    Authorization(Basic { username : username, password : Some(password) })
+    Authorization(Basic { username, password : Some(password) })
 }
 
 #[derive(Debug)]
@@ -51,7 +44,7 @@ pub enum TwilioError {
 }
 
 pub trait FromMap {
-    fn from_map(&HashMap<&str,&str>) -> Result<Box<Self>,TwilioError>;
+    fn from_map(m: &HashMap<&str,&str>) -> Result<Box<Self>,TwilioError>;
 }
 
 impl Client {

@@ -1,4 +1,4 @@
-use twiml::{Action,format_xml_string,Method};
+use super::{Action,format_xml_string,Method};
 pub struct Redirect {
     pub url : String,
     pub method : Method,
