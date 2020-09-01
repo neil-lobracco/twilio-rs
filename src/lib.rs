@@ -35,7 +35,7 @@ fn url_encode(params: &[(&str, &str)]) -> String {
         .fold("".to_string(), |mut acc, item| {
             acc.push_str(&item);
             acc.push_str("&");
-            acc
+            acc.replace("+", "%2B")
         })
 }
 
