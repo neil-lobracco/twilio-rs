@@ -11,6 +11,8 @@ use hyper::{Body, Method, StatusCode};
 use hyper_tls::HttpsConnector;
 pub use message::{Message, OutboundMessage};
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
@@ -39,11 +41,32 @@ fn url_encode(params: &[(&str, &str)]) -> String {
 
 #[derive(Debug)]
 pub enum TwilioError {
-    NetworkError,
-    HTTPError,
+    NetworkError(hyper::Error),
+    HTTPError(StatusCode),
     ParsingError,
     AuthError,
     BadRequest,
+}
+
+impl Display for TwilioError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match *self {
+            TwilioError::NetworkError(ref e) => e.fmt(f),
+            TwilioError::HTTPError(ref s) => write!(f, "Invalid HTTP status code: {}", s),
+            TwilioError::ParsingError => f.write_str("Parsing error"),
+            TwilioError::AuthError => f.write_str("Missing `X-Twilio-Signature` header in request"),
+            TwilioError::BadRequest => f.write_str("Bad request"),
+        }
+    }
+}
+
+impl Error for TwilioError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match *self {
+            TwilioError::NetworkError(ref e) => Some(e),
+            _ => None,
+        }
+    }
 }
 
 pub trait FromMap {
@@ -87,16 +110,16 @@ impl Client {
             .http_client
             .request(req)
             .await
-            .map_err(|_| TwilioError::NetworkError)?;
+            .map_err(TwilioError::NetworkError)?;
 
         match resp.status() {
-            StatusCode::CREATED | StatusCode::OK => (),
-            _ => return Err(TwilioError::HTTPError),
+            StatusCode::CREATED | StatusCode::OK => {}
+            other => return Err(TwilioError::HTTPError(other)),
         };
 
         let decoded: T = hyper::body::to_bytes(resp.into_body())
             .await
-            .map_err(|_| TwilioError::NetworkError)
+            .map_err(TwilioError::NetworkError)
             .and_then(|bytes| {
                 serde_json::from_slice(&bytes).map_err(|_| TwilioError::ParsingError)
             })?;

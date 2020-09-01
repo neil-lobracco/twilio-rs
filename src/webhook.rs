@@ -36,7 +36,7 @@ impl Client {
         let (parts, body) = req.into_parts();
         let body = hyper::body::to_bytes(body)
             .await
-            .map_err(|_| TwilioError::NetworkError)?;
+            .map_err(TwilioError::NetworkError)?;
         let host = match parts.headers.typed_get::<Host>() {
             None => return Err(TwilioError::BadRequest),
             Some(h) => h.hostname().to_string(),
