@@ -15,16 +15,16 @@ impl<'a> OutboundCall<'a> {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(non_camel_case_types)]
+#[serde(rename_all = "lowercase")]
 pub enum CallStatus {
-    queued,
-    ringing,
-    inprogress,
-    canceled,
-    completed,
-    failed,
-    busy,
-    noanswer,
+    Queued,
+    Ringing,
+    InProgress,
+    Canceled,
+    Completed,
+    Failed,
+    Busy,
+    NoAnswer,
 }
 
 #[derive(Debug, Deserialize)]
@@ -61,14 +61,14 @@ impl FromMap for Call {
             None => return Err(TwilioError::ParsingError),
         };
         let stat = match m.get("CallStatus") {
-            Some(&"queued") => CallStatus::queued,
-            Some(&"ringing") => CallStatus::ringing,
-            Some(&"in-progress") => CallStatus::inprogress,
-            Some(&"canceled") => CallStatus::canceled,
-            Some(&"completed") => CallStatus::completed,
-            Some(&"failed") => CallStatus::failed,
-            Some(&"busy") => CallStatus::busy,
-            Some(&"no-answer") => CallStatus::noanswer,
+            Some(&"queued") => CallStatus::Queued,
+            Some(&"ringing") => CallStatus::Ringing,
+            Some(&"in-progress") => CallStatus::InProgress,
+            Some(&"canceled") => CallStatus::Canceled,
+            Some(&"completed") => CallStatus::Completed,
+            Some(&"failed") => CallStatus::Failed,
+            Some(&"busy") => CallStatus::Busy,
+            Some(&"no-answer") => CallStatus::NoAnswer,
             _ => return Err(TwilioError::ParsingError),
         };
         Ok(Box::new(Call {
