@@ -1,6 +1,6 @@
 use crate::{Client, FromMap, TwilioError, POST};
 use serde_derive::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub struct OutboundCall<'a> {
     pub from: &'a str,
@@ -47,34 +47,34 @@ impl Client {
 }
 
 impl FromMap for Call {
-    fn from_map(m: &HashMap<&str, &str>) -> Result<Box<Call>, TwilioError> {
-        let from = match m.get("From") {
-            Some(&v) => v,
+    fn from_map(mut m: BTreeMap<String, String>) -> Result<Box<Call>, TwilioError> {
+        let from = match m.remove("From") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let to = match m.get("To") {
-            Some(&v) => v,
+        let to = match m.remove("To") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let sid = match m.get("CallSid") {
-            Some(&v) => v,
+        let sid = match m.remove("CallSid") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let stat = match m.get("CallStatus") {
-            Some(&"queued") => CallStatus::Queued,
-            Some(&"ringing") => CallStatus::Ringing,
-            Some(&"in-progress") => CallStatus::InProgress,
-            Some(&"canceled") => CallStatus::Canceled,
-            Some(&"completed") => CallStatus::Completed,
-            Some(&"failed") => CallStatus::Failed,
-            Some(&"busy") => CallStatus::Busy,
-            Some(&"no-answer") => CallStatus::NoAnswer,
+        let stat = match m.get("CallStatus").map(|s| s.as_str()) {
+            Some("queued") => CallStatus::Queued,
+            Some("ringing") => CallStatus::Ringing,
+            Some("in-progress") => CallStatus::InProgress,
+            Some("canceled") => CallStatus::Canceled,
+            Some("completed") => CallStatus::Completed,
+            Some("failed") => CallStatus::Failed,
+            Some("busy") => CallStatus::Busy,
+            Some("no-answer") => CallStatus::NoAnswer,
             _ => return Err(TwilioError::ParsingError),
         };
         Ok(Box::new(Call {
-            from: from.to_string(),
-            to: to.to_string(),
-            sid: sid.to_string(),
+            from,
+            to,
+            sid,
             status: stat,
         }))
     }

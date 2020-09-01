@@ -10,7 +10,7 @@ use hyper::client::connect::HttpConnector;
 use hyper::{Body, Method, StatusCode};
 use hyper_tls::HttpsConnector;
 pub use message::{Message, OutboundMessage};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
@@ -47,7 +47,7 @@ pub enum TwilioError {
 }
 
 pub trait FromMap {
-    fn from_map(m: &HashMap<&str, &str>) -> Result<Box<Self>, TwilioError>;
+    fn from_map(m: BTreeMap<String, String>) -> Result<Box<Self>, TwilioError>;
 }
 
 impl Client {

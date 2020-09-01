@@ -4,25 +4,19 @@ use crypto::mac::{Mac, MacResult};
 use crypto::sha1::Sha1;
 use headers::{HeaderMapExt, Host};
 use hyper::{Body, Method, Request};
+use std::collections::BTreeMap;
 
-fn parse_object<T: FromMap>(args: &[(String, String)]) -> Result<Box<T>, TwilioError> {
-    let m = args.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-    T::from_map(&m)
-}
-
-fn get_args(path: &str) -> Vec<(String, String)> {
+fn get_args(path: &str) -> BTreeMap<String, String> {
     let url_segments: Vec<&str> = path.split('?').collect();
     if url_segments.len() != 2 {
-        return vec![];
+        return BTreeMap::new();
     }
     let query_string = url_segments[1];
     args_from_urlencoded(query_string.as_bytes())
 }
 
-fn args_from_urlencoded(enc: &[u8]) -> Vec<(String, String)> {
-    url::form_urlencoded::parse(enc)
-        .into_owned()
-        .collect::<Vec<(String, String)>>()
+fn args_from_urlencoded(enc: &[u8]) -> BTreeMap<String, String> {
+    url::form_urlencoded::parse(enc).into_owned().collect()
 }
 
 impl Client {
@@ -54,8 +48,7 @@ impl Client {
         let (args, post_append) = match parts.method {
             Method::GET => (get_args(request_path), "".to_string()),
             Method::POST => {
-                let mut postargs = args_from_urlencoded(&body);
-                postargs.sort_by(|(k1, _), (k2, _)| k1.cmp(&k2));
+                let postargs = args_from_urlencoded(&body);
                 let append = postargs
                     .iter()
                     .map(|(k, v)| format!("{}{}", k, v))
@@ -74,6 +67,6 @@ impl Client {
             return Err(TwilioError::AuthError);
         }
 
-        parse_object::<T>(&args)
+        T::from_map(args)
     }
 }

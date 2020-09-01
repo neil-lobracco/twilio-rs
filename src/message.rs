@@ -1,6 +1,6 @@
 use crate::{Client, FromMap, TwilioError, POST};
 use serde_derive::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub struct OutboundMessage<'a> {
     pub from: &'a str,
@@ -44,25 +44,25 @@ impl Client {
 }
 
 impl FromMap for Message {
-    fn from_map(m: &HashMap<&str, &str>) -> Result<Box<Message>, TwilioError> {
-        let from = match m.get("From") {
-            Some(&v) => v,
+    fn from_map(mut m: BTreeMap<String, String>) -> Result<Box<Message>, TwilioError> {
+        let from = match m.remove("From") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let to = match m.get("To") {
-            Some(&v) => v,
+        let to = match m.remove("To") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let sid = match m.get("MessageSid") {
-            Some(&v) => v,
+        let sid = match m.remove("MessageSid") {
+            Some(v) => v,
             None => return Err(TwilioError::ParsingError),
         };
-        let body = m.get("Body");
+        let body = m.remove("Body");
         Ok(Box::new(Message {
-            from: from.to_string(),
-            to: to.to_string(),
-            sid: sid.to_string(),
-            body: body.map(|s| s.to_string()),
+            from,
+            to,
+            sid,
+            body,
             status: None,
         }))
     }
