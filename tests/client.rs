@@ -1,11 +1,8 @@
-extern crate dotenv;
-extern crate twilio;
-
 use std::env;
 use twilio::{Client, OutboundMessage};
 
-#[test]
-fn send_sms() {
+#[tokio::test]
+async fn send_sms() {
     dotenv::dotenv().ok();
 
     let account_id = env::var("ACCOUNT_ID").expect("Find ACCOUNT_ID environment variable");
@@ -16,5 +13,6 @@ fn send_sms() {
     let client = Client::new(&account_id, &auth_token);
     client
         .send_message(OutboundMessage::new(&from, &to, "Hello, World!"))
+        .await
         .expect("to send message");
 }

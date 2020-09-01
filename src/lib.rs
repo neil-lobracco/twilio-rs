@@ -3,20 +3,23 @@ mod message;
 pub mod twiml;
 mod webhook;
 pub use call::{Call, OutboundCall};
-use hyper::header::{Authorization, Basic};
-pub use hyper::method::Method::{Get, Post, Put};
-use hyper::net::HttpsConnector;
-use hyper::status::StatusCode;
-use hyper_native_tls::NativeTlsClient;
+use headers::authorization::{Authorization, Basic};
+use headers::{ContentType, HeaderMapExt};
+use hyper::client::connect::HttpConnector;
+use hyper::{Body, Method, StatusCode};
+use hyper_tls::HttpsConnector;
 pub use message::{Message, OutboundMessage};
 use std::collections::HashMap;
-use std::io::Read;
-use std::io::Write;
+
+pub const GET: Method = Method::GET;
+pub const POST: Method = Method::POST;
+pub const PUT: Method = Method::PUT;
 
 pub struct Client {
     account_id: String,
     auth_token: String,
     auth_header: Authorization<Basic>,
+    http_client: hyper::Client<HttpsConnector<HttpConnector>>,
 }
 
 fn url_encode(params: &[(&str, &str)]) -> String {
@@ -31,13 +34,6 @@ fn url_encode(params: &[(&str, &str)]) -> String {
             acc.push_str("&");
             acc
         })
-}
-
-fn basic_auth_header(username: String, password: String) -> Authorization<Basic> {
-    Authorization(Basic {
-        username,
-        password: Some(password),
-    })
 }
 
 #[derive(Debug)]
@@ -58,13 +54,14 @@ impl Client {
         Client {
             account_id: account_id.to_string(),
             auth_token: auth_token.to_string(),
-            auth_header: basic_auth_header(account_id.to_string(), auth_token.to_string()),
+            auth_header: Authorization::basic(account_id, auth_token),
+            http_client: hyper::Client::builder().build(HttpsConnector::new()),
         }
     }
 
-    fn send_request<T>(
+    async fn send_request<T>(
         &self,
-        method: hyper::method::Method,
+        method: hyper::Method,
         endpoint: &str,
         params: &[(&str, &str)],
     ) -> Result<T, TwilioError>
@@ -75,64 +72,60 @@ impl Client {
             "https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",
             self.account_id, endpoint
         );
-        let ssl = NativeTlsClient::new().unwrap();
-        let connector = HttpsConnector::new(ssl);
-        let http_client = hyper::Client::with_connector(connector);
-        let post_body: &str = &*url_encode(params);
+        let mut req = hyper::Request::builder()
+            .method(method)
+            .uri(&*url)
+            .body(Body::from(url_encode(params)))
+            .unwrap();
+
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();
-        let content_type_header = hyper::header::ContentType(mime);
-        let req = http_client
-            .request(method, &*url)
-            .body(post_body)
-            .header(self.auth_header.clone())
-            .header(content_type_header);
-        let mut resp = match req.send() {
-            Ok(res) => res,
-            Err(_) => return Err(TwilioError::NetworkError),
-        };
-        let mut body_str = "".to_string();
-        match resp.read_to_string(&mut body_str) {
-            Ok(_) => (),
-            Err(_) => return Err(TwilioError::NetworkError),
-        };
-        match resp.status {
-            StatusCode::Created | StatusCode::Ok => (),
+        req.headers_mut().typed_insert(ContentType::from(mime));
+        req.headers_mut().typed_insert(self.auth_header.clone());
+
+        let resp = self
+            .http_client
+            .request(req)
+            .await
+            .map_err(|_| TwilioError::NetworkError)?;
+
+        match resp.status() {
+            StatusCode::CREATED | StatusCode::OK => (),
             _ => return Err(TwilioError::HTTPError),
         };
-        let decoded: T = match serde_json::from_str(&body_str) {
-            Ok(obj) => obj,
-            Err(_) => return Err(TwilioError::ParsingError),
-        };
+
+        let decoded: T = hyper::body::to_bytes(resp.into_body())
+            .await
+            .map_err(|_| TwilioError::NetworkError)
+            .and_then(|bytes| {
+                serde_json::from_slice(&bytes).map_err(|_| TwilioError::ParsingError)
+            })?;
+
         Ok(decoded)
     }
 
-    pub fn respond_to_webhook<T: FromMap, F>(
+    pub async fn respond_to_webhook<T: FromMap, F>(
         &self,
-        req: &mut hyper::server::Request,
-        mut res: hyper::server::Response,
+        req: hyper::Request<Body>,
         mut logic: F,
-    ) where
+    ) -> hyper::Response<Body>
+    where
         F: FnMut(T) -> twiml::Twiml,
     {
-        let o: T = match self.parse_request::<T>(req) {
-            Err(_) => {
-                *res.status_mut() = hyper::BadRequest;
-                let mut res = res.start().unwrap();
-                res.write_all("Error.".as_bytes()).unwrap();
-                res.end().unwrap();
-                return;
-            }
+        let o: T = match self.parse_request::<T>(req).await {
             Ok(obj) => *obj,
+            Err(_) => {
+                let mut res = hyper::Response::new(Body::from("Error.".as_bytes()));
+                *res.status_mut() = StatusCode::BAD_REQUEST;
+                return res;
+            }
         };
+
         let t = logic(o);
         let body = t.as_twiml();
-        let mime: mime::Mime = "text/xml".parse().unwrap();
-        let content_type_header = hyper::header::ContentType(mime);
-        res.headers_mut().set(content_type_header);
-        res.headers_mut()
-            .set(hyper::header::ContentLength(body.len() as u64));
-        let mut res = res.start().unwrap();
-        res.write_all(body.as_bytes()).unwrap();
-        res.end().unwrap();
+        let len = body.len() as u64;
+        let mut res = hyper::Response::new(Body::from(body));
+        res.headers_mut().typed_insert(headers::ContentType::xml());
+        res.headers_mut().typed_insert(headers::ContentLength(len));
+        res
     }
 }

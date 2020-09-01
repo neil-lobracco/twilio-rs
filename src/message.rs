@@ -1,5 +1,6 @@
-use crate::{Client, FromMap, Post, TwilioError};
+use crate::{Client, FromMap, TwilioError, POST};
 use serde_derive::Deserialize;
+use std::collections::HashMap;
 
 pub struct OutboundMessage<'a> {
     pub from: &'a str,
@@ -34,14 +35,14 @@ pub struct Message {
 }
 
 impl Client {
-    pub fn send_message(&self, msg: OutboundMessage) -> Result<Message, TwilioError> {
+    pub async fn send_message(&self, msg: OutboundMessage<'_>) -> Result<Message, TwilioError> {
         let opts = [("To", &*msg.to), ("From", &*msg.from), ("Body", &*msg.body)];
-        self.send_request(Post, "Messages", &opts)
+        self.send_request(POST, "Messages", &opts).await
     }
 }
 
 impl FromMap for Message {
-    fn from_map(m: &::std::collections::HashMap<&str, &str>) -> Result<Box<Message>, TwilioError> {
+    fn from_map(m: &HashMap<&str, &str>) -> Result<Box<Message>, TwilioError> {
         let from = match m.get("From") {
             Some(&v) => v,
             None => return Err(TwilioError::ParsingError),

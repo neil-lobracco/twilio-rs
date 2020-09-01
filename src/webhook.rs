@@ -2,12 +2,9 @@ use crate::{Client, FromMap, TwilioError};
 use crypto::hmac::Hmac;
 use crypto::mac::{Mac, MacResult};
 use crypto::sha1::Sha1;
-use hyper::header::Host;
-use hyper::method::Method::{Get, Post};
-use hyper::server::request::Request;
-use hyper::uri::RequestUri::AbsolutePath;
+use headers::{HeaderMapExt, Host};
+use hyper::{Body, Method, Request};
 use std::collections::HashMap;
-use std::io::Read;
 
 fn parse_object<T: FromMap>(args: &[(String, String)]) -> Result<Box<T>, TwilioError> {
     let mut m = HashMap::new();
@@ -23,60 +20,55 @@ fn get_args(path: &str) -> Vec<(String, String)> {
         return vec![];
     }
     let query_string = url_segments[1];
-    args_from_urlencoded(query_string)
+    args_from_urlencoded(query_string.as_bytes())
 }
 
-fn args_from_urlencoded(enc: &str) -> Vec<(String, String)> {
-    url::form_urlencoded::parse(enc.as_bytes())
+fn args_from_urlencoded(enc: &[u8]) -> Vec<(String, String)> {
+    url::form_urlencoded::parse(enc)
         .into_owned()
         .collect::<Vec<(String, String)>>()
 }
 
 impl Client {
-    pub fn parse_request<T: FromMap>(&self, req: &mut Request) -> Result<Box<T>, TwilioError> {
-        let sig = match req.headers.get_raw("X-Twilio-Signature") {
-            None => return Err(TwilioError::AuthError),
-            Some(d) => match d.len() {
-                1 => match base64::decode(&d[0]) {
-                    Ok(v) => v,
-                    Err(_) => return Err(TwilioError::BadRequest),
-                },
-                _ => return Err(TwilioError::BadRequest),
-            },
-        };
-        let mut bod = "".to_string();
-        req.read_to_string(&mut bod).unwrap();
-        let host: &str = match req.headers.get::<Host>() {
+    pub async fn parse_request<T: FromMap>(
+        &self,
+        req: Request<Body>,
+    ) -> Result<Box<T>, TwilioError> {
+        let sig = req
+            .headers()
+            .get("X-Twilio-Signature")
+            .ok_or_else(|| TwilioError::AuthError)
+            .and_then(|d| match d.len() {
+                1 => base64::decode(d.as_bytes()).map_err(|_| TwilioError::BadRequest),
+                _ => Err(TwilioError::BadRequest),
+            })?;
+
+        let (parts, body) = req.into_parts();
+        let body = hyper::body::to_bytes(body)
+            .await
+            .map_err(|_| TwilioError::NetworkError)?;
+        let host = match parts.headers.typed_get::<Host>() {
             None => return Err(TwilioError::BadRequest),
-            Some(h) => &h.hostname,
+            Some(h) => h.hostname().to_string(),
         };
-        let request_path: &str = match req.uri {
-            AbsolutePath(ref s) => s,
-            _ => return Err(TwilioError::BadRequest),
+        let request_path = match parts.uri.path() {
+            "*" => return Err(TwilioError::BadRequest),
+            path => path,
         };
-        let (args, post_append) = match req.method {
-            Get => (get_args(request_path), "".to_string()),
-            Post => {
-                let mut postargs = args_from_urlencoded(&bod);
-                postargs.sort_by(|p1, p2| {
-                    let k1 = &p1.0;
-                    let k2 = &p2.0;
-                    k1.cmp(&k2)
-                });
+        let (args, post_append) = match parts.method {
+            Method::GET => (get_args(request_path), "".to_string()),
+            Method::POST => {
+                let mut postargs = args_from_urlencoded(&body);
+                postargs.sort_by(|(k1, _), (k2, _)| k1.cmp(&k2));
                 let append = postargs
                     .iter()
-                    .map(|t| {
-                        let (k, v) = (&t.0, &t.1);
-                        format!("{}{}", k, v)
-                    })
-                    .fold("".to_string(), |mut acc, item| {
-                        acc.push_str(&item);
-                        acc
-                    });
+                    .map(|(k, v)| format!("{}{}", k, v))
+                    .collect();
                 (postargs, append)
             }
             _ => return Err(TwilioError::BadRequest),
         };
+
         let effective_uri = format!("https://{}{}{}", host, request_path, post_append);
         let mut hmac = Hmac::new(Sha1::new(), self.auth_token.as_bytes());
         hmac.input(effective_uri.as_bytes());
@@ -85,6 +77,7 @@ impl Client {
         if result != expected {
             return Err(TwilioError::AuthError);
         }
+
         parse_object::<T>(&args)
     }
 }
