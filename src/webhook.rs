@@ -28,10 +28,7 @@ impl Client {
             .headers()
             .get("X-Twilio-Signature")
             .ok_or_else(|| TwilioError::AuthError)
-            .and_then(|d| match d.len() {
-                1 => base64::decode(d.as_bytes()).map_err(|_| TwilioError::BadRequest),
-                _ => Err(TwilioError::BadRequest),
-            })?;
+            .and_then(|d| base64::decode(d.as_bytes()).map_err(|_| TwilioError::BadRequest))?;
 
         let (parts, body) = req.into_parts();
         let body = hyper::body::to_bytes(body)
