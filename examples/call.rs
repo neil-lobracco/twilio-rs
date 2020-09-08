@@ -4,7 +4,7 @@ use twilio::{Client, OutboundCall};
 async fn main() {
     let to = "<to-number>";
     let from = "<from-number>";
-    let url = "http://demo.twilio.com/welcome/voice/";
+    let url = "https://demo.twilio.com/welcome/voice/";
     let app_id = "my_app_id";
     let auth_token = "my_auth_token";
     let client = Client::new(app_id, auth_token);
