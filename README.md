@@ -7,39 +7,64 @@ twilio-rs
 
 First, you'll need to create a Twilio client:
 
-	let client = twilio::Client::new(ACCOUNT_ID,AUTH_TOKEN);
+```rust
+let client = twilio::Client::new(ACCOUNT_ID, AUTH_TOKEN);
+```
 	
 Now, you can use that client to make or receive Twilio requests. For example, to send a message:
 
-	client.send_message(OutboundMessage::new(from,to,"Hello, World!"));
+```rust
+client.send_message(OutboundMessage::new(from, to, "Hello, World!")).await;
+```
 
 Or to make a call:
 
-	client.make_call(OutboundCall::new(from,to,callback_url));
+```rust
+client.make_call(OutboundCall::new(from, to, callback_url)).await;
+```
 	
 Of course, much of our interaction with Twilio is by defining resources that respond to Twilio webhooks. To respond to every SMS with a customized reply, in your server's handler method:
 
-	fn handle_request(mut req: Request, res: Response)  {
-		let client = ...;
-		client.respond_to_webhook(&mut req, res, |msg: Message|{
-			let mut t = Twiml::new();
-            t.add(&twiml::Message {txt: format!("You told me: '{}'",msg.body.unwrap())});
-            t
-            });
-		});
-	}
+```rust
+use hyper::{Body, Request, Response};
+use std::convert::Infallible;
+
+async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+    let client = ...;
+    let response = client.respond_to_webhook(req, |msg: Message| {
+        let mut t = Twiml::new();
+        t.add(&twiml::Message {
+            txt: format!("You told me: '{}'",
+            msg.body.unwrap()),
+        });
+        t
+    })
+    .await;
+    Ok(response)
+}
+```
 
 Alternatively, to respond to a voice callback with a message:
 
-	fn handle_request(mut req: Request, res: Response)  {
-		let client = ...;
-		client.respond_to_webhook(&mut req, res, |msg: Call|{
-			let mut t = Twiml::new();
-			t.add(&Say{txt: "Thanks for using twilio-rs. Bye!".to_string(),voice: Woman,language: "en".to_string()});
-            t
-            });
-		});
-	}
+```rust
+use hyper::{Body, Request, Response};
+use std::convert::Infallible;
+
+async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+    let client = ...;
+    let response = client.respond_to_webhook(req, |msg: Call| {
+        let mut t = Twiml::new();
+        t.add(&twitml::Say {
+            txt: "Thanks for using twilio-rs. Bye!".to_string(),
+            voice: Voice::Woman,
+            language: "en".to_string(),
+        });
+        t
+    })
+    .await;
+    Ok(response)
+}
+```
 
 Using the `respond_to_webhook` method will first authenticate that the request came from Twilio, using your AuthToken. If that fails, an error will be sent to the client. Next, the call or message will be parsed from the parameters passed in. If a required field is missing, an error will be sent to the client. Finally, the parsed object will be passed to your handler method, which must return a `Twiml` that will be used to respond to the webhook.
 

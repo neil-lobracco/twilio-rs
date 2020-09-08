@@ -1,4 +1,4 @@
-use twiml::{Action,format_xml_string,Method};
+use super::{format_xml_string, Action, Method};
 use std::default::Default;
 
 pub struct Sms {
@@ -17,25 +17,32 @@ impl Action for Sms {
             Method::Get => "GET",
             Method::Post => "POST",
         };
-        attrs.push(("method",method_str));
+        attrs.push(("method", method_str));
         if let Some(ref a) = self.action {
-            attrs.push(("action",a));
+            attrs.push(("action", a));
         }
         if let Some(ref f) = self.from {
-            attrs.push(("from",f));
+            attrs.push(("from", f));
         }
         if let Some(ref t) = self.to {
-            attrs.push(("to",t));
+            attrs.push(("to", t));
         }
         if let Some(ref c) = self.status_callback {
-            attrs.push(("statusCallback",c));
+            attrs.push(("statusCallback", c));
         }
-        format_xml_string("Sms",&attrs,self.txt.as_ref())
+        format_xml_string("Sms", &attrs, self.txt.as_ref())
     }
 }
 
 impl Default for Sms {
     fn default() -> Sms {
-        Sms { txt: "".to_string(), action: None, method: Method::Post, from: None, to: None, status_callback: None }
+        Sms {
+            txt: "".to_string(),
+            action: None,
+            method: Method::Post,
+            from: None,
+            to: None,
+            status_callback: None,
+        }
     }
 }
