@@ -9,10 +9,12 @@ use headers::{ContentType, HeaderMapExt};
 use hyper::client::connect::HttpConnector;
 use hyper::{Body, Method, StatusCode};
 use hyper_tls::HttpsConnector;
+use serde::Deserialize;
 pub use message::{Message, OutboundMessage};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use crate::TwilioError::ServiceError;
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
@@ -39,6 +41,14 @@ fn url_encode(params: &[(&str, &str)]) -> String {
         })
 }
 
+#[derive(Debug, Deserialize)]
+pub struct TwilioServiceError {
+    pub code: u32,
+    pub status: u32,
+    pub message: String,
+    pub more_info: String,
+}
+
 #[derive(Debug)]
 pub enum TwilioError {
     NetworkError(hyper::Error),
@@ -46,6 +56,7 @@ pub enum TwilioError {
     ParsingError,
     AuthError,
     BadRequest,
+    ServiceError(TwilioServiceError)
 }
 
 impl Display for TwilioError {
@@ -56,6 +67,7 @@ impl Display for TwilioError {
             TwilioError::ParsingError => f.write_str("Parsing error"),
             TwilioError::AuthError => f.write_str("Missing `X-Twilio-Signature` header in request"),
             TwilioError::BadRequest => f.write_str("Bad request"),
+            TwilioError::ServiceError(ref se) => write!(f, "Twilio service error: [{}] {}", se.code, se.message),
         }
     }
 }
@@ -114,6 +126,16 @@ impl Client {
 
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {}
+            StatusCode::BAD_REQUEST => {
+                let decoded: TwilioServiceError = hyper::body::to_bytes(resp.into_body())
+                    .await
+                    .map_err(TwilioError::NetworkError)
+                    .and_then(|bytes| {
+                        serde_json::from_slice(&bytes).map_err(|_| TwilioError::ParsingError)
+                    })?;
+
+                return Err(ServiceError(decoded));
+            },
             other => return Err(TwilioError::HTTPError(other)),
         };
 
