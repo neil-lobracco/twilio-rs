@@ -9,11 +9,16 @@ authors = ["Neil LoBracco <neil.lobracco@gmail.com>", "Lance Carlson <lancecarls
 keywords = ["twilio","rust"]
 edition = "2018"
 
+[features]
+default = ["hyper-tls"]
+rustls = ["hyper-rustls"]
+
 [dependencies]
 base64 = "0.12"
 headers = "0.3.2"
 hyper = "0.13"
-hyper-tls = "0.4"
+hyper-tls = { version = "0.4", optional = true }
+hyper-rustls = { version = "0.21", optional = true }
 mime = "0.3"
 serde = { version = "1.0.10", features = ["derive"] }
 serde_json = "1.0.2"

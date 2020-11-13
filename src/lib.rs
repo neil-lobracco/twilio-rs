@@ -8,11 +8,16 @@ use headers::authorization::{Authorization, Basic};
 use headers::{ContentType, HeaderMapExt};
 use hyper::client::connect::HttpConnector;
 use hyper::{Body, Method, StatusCode};
-use hyper_tls::HttpsConnector;
 pub use message::{Message, OutboundMessage};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+
+#[cfg(feature = "hyper-tls")]
+use hyper_tls::HttpsConnector;
+
+#[cfg(feature = "rustls")]
+use hyper_rustls::HttpsConnector;
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
