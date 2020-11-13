@@ -69,3 +69,10 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
 Using the `respond_to_webhook` method will first authenticate that the request came from Twilio, using your AuthToken. If that fails, an error will be sent to the client. Next, the call or message will be parsed from the parameters passed in. If a required field is missing, an error will be sent to the client. Finally, the parsed object will be passed to your handler method, which must return a `Twiml` that will be used to respond to the webhook.
 
 The `respond_to_webhook` method is designed to work on [Hyper](https://github.com/hyperium/hyper) `Request`s and `Response`s. Hyper is also used internally to make requests to Twilio's API.
+
+## Using rustls
+
+If you want to replace the use of native TLS (usually OpenSSL) with rustls you can enable the rustls feature like so:
+
+```toml
+twilio = { version = "1.0", default-features = false, features = ["rustls"] }
