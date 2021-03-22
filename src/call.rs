@@ -1,7 +1,9 @@
 use crate::{Client, FromMap, TwilioError, POST};
 use serde::Deserialize;
+use serde::Serialize;
 use std::collections::BTreeMap;
 
+#[derive(Debug, Serialize)]
 pub struct OutboundCall<'a> {
     pub from: &'a str,
     pub to: &'a str,
@@ -37,12 +39,7 @@ pub struct Call {
 
 impl Client {
     pub async fn make_call(&self, call: OutboundCall<'_>) -> Result<Call, TwilioError> {
-        let opts = [
-            ("To", &*call.to),
-            ("From", &*call.from),
-            ("Url", &*call.url),
-        ];
-        self.send_request(POST, "Calls", &opts).await
+        self.send_request(POST, "Calls", &call).await
     }
 }
 

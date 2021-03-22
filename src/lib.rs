@@ -13,6 +13,7 @@ pub use message::{Message, OutboundMessage};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use log::error;
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
@@ -23,20 +24,6 @@ pub struct Client {
     auth_token: String,
     auth_header: Authorization<Basic>,
     http_client: hyper::Client<HttpsConnector<HttpConnector>>,
-}
-
-fn url_encode(params: &[(&str, &str)]) -> String {
-    params
-        .iter()
-        .map(|&t| {
-            let (k, v) = t;
-            format!("{}={}", k, v)
-        })
-        .fold("".to_string(), |mut acc, item| {
-            acc.push_str(&item);
-            acc.push_str("&");
-            acc.replace("+", "%2B")
-        })
 }
 
 #[derive(Debug)]
@@ -87,7 +74,7 @@ impl Client {
         &self,
         method: hyper::Method,
         endpoint: &str,
-        params: &[(&str, &str)],
+        params: &'_ impl serde::Serialize,
     ) -> Result<T, TwilioError>
     where
         T: serde::de::DeserializeOwned,
@@ -96,10 +83,17 @@ impl Client {
             "https://api.twilio.com/2010-04-01/Accounts/{}/{}.json",
             self.account_id, endpoint
         );
+
+        let query_string_result = serde_urlencoded::to_string(params);
+        if let Err(query_string_error) = query_string_result {
+            error!("Developer error: {}", query_string_error);
+            return Err(TwilioError::BadRequest)
+        }
+
         let mut req = hyper::Request::builder()
             .method(method)
             .uri(&*url)
-            .body(Body::from(url_encode(params)))
+            .body(Body::from(query_string_result.unwrap()))
             .unwrap();
 
         let mime: mime::Mime = "application/x-www-form-urlencoded".parse().unwrap();

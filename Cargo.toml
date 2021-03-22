@@ -14,9 +14,11 @@ base64 = "0.12"
 headers = "0.3.2"
 hyper = "0.13"
 hyper-tls = "0.4"
+log = "0.4"
 mime = "0.3"
 serde = { version = "1.0.10", features = ["derive"] }
 serde_json = "1.0.2"
+serde_urlencoded = "0.7"
 rust-crypto = "0.2"
 url = "2.0"
 
