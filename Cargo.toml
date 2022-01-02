@@ -12,8 +12,8 @@ edition = "2018"
 [dependencies]
 base64 = "0.12"
 headers = "0.3.2"
-hyper = "0.13"
-hyper-tls = "0.4"
+hyper = { version = "0.14", features = ["client", "http1", "http2"] }
+hyper-tls = "0.5"
 mime = "0.3"
 serde = { version = "1.0.10", features = ["derive"] }
 serde_json = "1.0.2"
@@ -22,4 +22,5 @@ url = "2.0"
 
 [dev-dependencies]
 dotenv = "0.15"
-tokio = { version = "0.2", features = ["macros", "rt-core", "test-util"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "test-util"] }
+hyper = { version = "0.14", features = ["server"] }
