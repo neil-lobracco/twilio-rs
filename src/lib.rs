@@ -16,20 +16,6 @@ pub struct TwilioClient {
     client: Client,
 }
 
-fn url_encode(params: &[(&str, &str)]) -> String {
-    params
-        .iter()
-        .map(|&t| {
-            let (k, v) = t;
-            format!("{}={}", k, v)
-        })
-        .fold("".to_string(), |mut acc, item| {
-            acc.push_str(&item);
-            acc.push_str("&");
-            acc.replace("+", "%2B")
-        })
-}
-
 #[derive(Debug)]
 pub enum TwilioError {
     NetworkError(reqwest::Error),
@@ -100,7 +86,6 @@ impl TwilioClient {
             .await
             .map_err(TwilioError::NetworkError)?;
 
-        
         // println!("Headers: {:?}", response.headers());
         // println!("URL: {:?}", response.url());
         // println!("Error: {:?}", response.text().await.expect("no text"));
