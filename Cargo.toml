@@ -10,16 +10,11 @@ keywords = ["twilio","rust"]
 edition = "2018"
 
 [dependencies]
-base64 = "0.12"
-headers = "0.3.2"
-hyper = "0.13"
-hyper-tls = "0.4"
-mime = "0.3"
-serde = { version = "1.0.10", features = ["derive"] }
-serde_json = "1.0.2"
-rust-crypto = "0.2"
-url = "2.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.64"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+
 
 [dev-dependencies]
 dotenv = "0.15"
-tokio = { version = "0.2", features = ["macros", "rt-core", "test-util"] }
+tokio = { version = "1", features = ["full"] }

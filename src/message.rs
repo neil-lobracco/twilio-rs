@@ -1,4 +1,4 @@
-use crate::{Client, FromMap, TwilioError, POST};
+use crate::{FromMap, TwilioClient, TwilioError, POST};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -36,7 +36,7 @@ pub struct Message {
     pub status: Option<MessageStatus>,
 }
 
-impl Client {
+impl TwilioClient {
     pub async fn send_message(&self, msg: OutboundMessage<'_>) -> Result<Message, TwilioError> {
         let opts = [("To", &*msg.to), ("From", &*msg.from), ("Body", &*msg.body)];
         self.send_request(POST, "Messages", &opts).await
