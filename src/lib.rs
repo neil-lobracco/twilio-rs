@@ -13,6 +13,7 @@ pub use message::{Message, OutboundMessage};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use url::form_urlencoded;
 
 pub const GET: Method = Method::GET;
 pub const POST: Method = Method::POST;
@@ -26,17 +27,12 @@ pub struct Client {
 }
 
 fn url_encode(params: &[(&str, &str)]) -> String {
-    params
-        .iter()
-        .map(|&t| {
-            let (k, v) = t;
-            format!("{}={}", k, v)
-        })
-        .fold("".to_string(), |mut acc, item| {
-            acc.push_str(&item);
-            acc.push_str("&");
-            acc.replace("+", "%2B")
-        })
+    let mut url = form_urlencoded::Serializer::new(String::new());
+    for (k, v) in params {
+        url.append_pair(k, v);
+    }
+
+    url.finish()
 }
 
 #[derive(Debug)]
