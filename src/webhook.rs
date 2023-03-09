@@ -1,9 +1,7 @@
 use crate::{Client, FromMap, TwilioError};
-use crypto::hmac::Hmac;
-use crypto::mac::{Mac, MacResult};
-use crypto::sha1::Sha1;
 use headers::{HeaderMapExt, Host};
 use hyper::{Body, Method, Request};
+use sha1::{Digest, Sha1};
 use std::collections::BTreeMap;
 
 fn get_args(path: &str) -> BTreeMap<String, String> {
@@ -56,10 +54,12 @@ impl Client {
         };
 
         let effective_uri = format!("https://{}{}{}", host, request_path, post_append);
-        let mut hmac = Hmac::new(Sha1::new(), self.auth_token.as_bytes());
-        hmac.input(effective_uri.as_bytes());
-        let result = hmac.result();
-        let expected = MacResult::new(&sig);
+        let mut hasher = Sha1::new();
+        hasher.update(&self.auth_token);
+        hasher.update(&effective_uri);
+
+        let result = hasher.finalize().to_vec();
+        let expected = sig;
         if result != expected {
             return Err(TwilioError::AuthError);
         }
