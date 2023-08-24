@@ -1,4 +1,4 @@
-use crate::{Client, FromMap, TwilioError, POST};
+use crate::{Client, FromMap, TwilioError, POST, GET};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -34,12 +34,22 @@ pub struct Message {
     pub body: Option<String>,
     pub sid: String,
     pub status: Option<MessageStatus>,
+    pub date_created: Option<String>,
+    pub date_updated: Option<String>,
+    pub date_sent: Option<String>,
+    pub error_code: Option<String>,
+    pub error_message: Option<String>,
 }
 
 impl Client {
     pub async fn send_message(&self, msg: OutboundMessage<'_>) -> Result<Message, TwilioError> {
         let opts = [("To", &*msg.to), ("From", &*msg.from), ("Body", &*msg.body)];
         self.send_request(POST, "Messages", &opts).await
+    }
+
+    pub async fn get_message(&self, message_sid: String) -> Result<Message, TwilioError> {
+        let opts: &[(&str, &str)] = &[];
+        self.send_request(GET, format!("Messages/{}", message_sid).as_str(), &opts).await
     }
 }
 
@@ -64,6 +74,11 @@ impl FromMap for Message {
             sid,
             body,
             status: None,
+            error_code: None,
+            error_message: None,
+            date_created: None,
+            date_updated: None,
+            date_sent: None
         }))
     }
 }
