@@ -9,7 +9,7 @@ use headers::{ContentType, HeaderMapExt};
 use hyper::client::connect::HttpConnector;
 use hyper::{Body, Method, StatusCode};
 use hyper_tls::HttpsConnector;
-pub use message::{Message, OutboundMessage};
+pub use message::{Message, MessageStatus, OutboundMessage};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
