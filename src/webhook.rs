@@ -1,5 +1,6 @@
 use crate::{Client, FromMap, TwilioError};
 use headers::{HeaderMapExt, Host};
+use hmac::{Hmac, Mac};
 use hyper::{Body, Method, Request};
 use sha1::{Digest, Sha1};
 use std::collections::BTreeMap;
@@ -22,7 +23,7 @@ impl Client {
         &self,
         req: Request<Body>,
     ) -> Result<Box<T>, TwilioError> {
-        let sig = req
+        let expected = req
             .headers()
             .get("X-Twilio-Signature")
             .ok_or_else(|| TwilioError::AuthError)
@@ -54,12 +55,10 @@ impl Client {
         };
 
         let effective_uri = format!("https://{}{}{}", host, request_path, post_append);
-        let mut hasher = Sha1::new();
-        hasher.update(&self.auth_token);
-        hasher.update(&effective_uri);
+        let mut hasher = Hmac::<Sha1>::new_from_slice(self.auth_token.as_bytes()).unwrap();
+        hasher.update(effective_uri.as_bytes());
 
-        let result = hasher.finalize().to_vec();
-        let expected = sig;
+        let result = hasher.finalize().into_bytes().to_vec();
         if result != expected {
             return Err(TwilioError::AuthError);
         }
