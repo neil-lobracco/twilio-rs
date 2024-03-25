@@ -29,10 +29,10 @@ pub enum CallStatus {
 
 #[derive(Debug, Deserialize)]
 pub struct Call {
-    from: String,
-    to: String,
-    sid: String,
-    status: CallStatus,
+    pub from: String,
+    pub to: String,
+    pub sid: String,
+    pub status: CallStatus,
 }
 
 impl Client {

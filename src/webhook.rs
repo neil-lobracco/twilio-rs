@@ -2,7 +2,7 @@ use crate::{Client, FromMap, TwilioError};
 use headers::{HeaderMapExt, Host};
 use hmac::{Hmac, Mac};
 use hyper::{Body, Method, Request};
-use sha1::{Digest, Sha1};
+use sha1::Sha1;
 use std::collections::BTreeMap;
 
 fn get_args(path: &str) -> BTreeMap<String, String> {
