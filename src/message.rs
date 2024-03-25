@@ -14,17 +14,24 @@ impl<'a> OutboundMessage<'a> {
     }
 }
 
+/// See the Twilio docs on [Message Status values](https://www.twilio.com/docs/sms/api/message-resource#message-status-values)
+/// for descriptions of the message status values.
 #[derive(Debug, Deserialize)]
-#[allow(non_camel_case_types)]
+#[serde(rename_all = "snake_case")]
 pub enum MessageStatus {
-    queued,
-    sending,
-    sent,
-    failed,
-    delivered,
-    undelivered,
-    receiving,
-    received,
+    Queued,
+    Sending,
+    Sent,
+    Failed,
+    Delivered,
+    Undelivered,
+    Receiving,
+    Received,
+    Accepted,
+    Scheduled,
+    Read,
+    PartiallyDelivered,
+    Canceled,
 }
 
 #[derive(Debug, Deserialize)]
